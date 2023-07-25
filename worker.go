@@ -55,10 +55,8 @@ const (
 	TxReceiptsBatchSize = 16
 	RequestTimeout      = 16 * time.Second
 	RequestRetryDelay   = 32 * time.Millisecond
-
 	// Bech32Prefix defines the Bech32 prefix used for EthAccounts
 	Bech32Prefix = "d0"
-
 	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address
 	Bech32PrefixAccAddr = Bech32Prefix
 	// Bech32PrefixAccPub defines the Bech32 prefix of an account's public key
@@ -71,6 +69,14 @@ const (
 	Bech32PrefixConsAddr = Bech32Prefix + sdk.PrefixValidator + sdk.PrefixConsensus
 	// Bech32PrefixConsPub defines the Bech32 prefix of a consensus node public key
 	Bech32PrefixConsPub = Bech32Prefix + sdk.PrefixValidator + sdk.PrefixConsensus + sdk.PrefixPublic
+
+	evmtypesModuleName        = "evm"
+	cointypesModuleName       = "coin"
+	nfttypesReservedPool      = "reserved_pool"
+	legacytypesLegacyCoinPool = "legacy_coin_pool"
+	swaptypesSwapPool         = "atomic_swap_pool"
+	validatortypesModuleName  = "validator"
+	feetypesBurningPool       = "burning_pool"
 )
 
 type Worker struct {
@@ -200,20 +206,6 @@ type TransactionEVM struct {
 type FailedTxLog struct {
 	Log string `json:"log"`
 }
-
-const evmtypesModuleName = "evm"
-
-const cointypesModuleName = "coin"
-
-const nfttypesReservedPool = "reserved_pool"
-
-const legacytypesLegacyCoinPool = "legacy_coin_pool"
-
-const swaptypesSwapPool = "atomic_swap_pool"
-
-const validatortypesModuleName = "validator"
-
-const feetypesBurningPool = "burning_pool"
 
 var pool = map[string]bool{
 	mustConvertAndEncode(authtypes.NewModuleAddress(authtypes.FeeCollectorName)):     false,
