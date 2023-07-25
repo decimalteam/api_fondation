@@ -14,6 +14,22 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	evmtypes "github.com/evmos/ethermint/x/evm/types"
+
+	// Decimal modules
+
+	cointypes "bitbucket.org/decimalteam/go-smart-node/x/coin/types"
+	feetypes "bitbucket.org/decimalteam/go-smart-node/x/fee/types"
+	legacytypes "bitbucket.org/decimalteam/go-smart-node/x/legacy/types"
+	nfttypes "bitbucket.org/decimalteam/go-smart-node/x/nft/types"
+	swaptypes "bitbucket.org/decimalteam/go-smart-node/x/swap/types"
+	validatortypes "bitbucket.org/decimalteam/go-smart-node/x/validator/types"
 
 	"github.com/dustin/go-humanize"
 	"github.com/status-im/keycard-go/hexutils"
@@ -166,6 +182,21 @@ type TransactionEVM struct {
 
 type FailedTxLog struct {
 	Log string `json:"log"`
+}
+
+var pool = map[string]bool{
+	mustConvertAndEncode(authtypes.NewModuleAddress(authtypes.FeeCollectorName)):     false,
+	mustConvertAndEncode(authtypes.NewModuleAddress(distrtypes.ModuleName)):          false,
+	mustConvertAndEncode(authtypes.NewModuleAddress(stakingtypes.BondedPoolName)):    false,
+	mustConvertAndEncode(authtypes.NewModuleAddress(stakingtypes.NotBondedPoolName)): false,
+	mustConvertAndEncode(authtypes.NewModuleAddress(govtypes.ModuleName)):            false,
+	mustConvertAndEncode(authtypes.NewModuleAddress(evmtypes.ModuleName)):            false,
+	mustConvertAndEncode(authtypes.NewModuleAddress(cointypes.ModuleName)):           false,
+	mustConvertAndEncode(authtypes.NewModuleAddress(nfttypes.ReservedPool)):          false,
+	mustConvertAndEncode(authtypes.NewModuleAddress(legacytypes.LegacyCoinPool)):     false,
+	mustConvertAndEncode(authtypes.NewModuleAddress(swaptypes.SwapPool)):             false,
+	mustConvertAndEncode(authtypes.NewModuleAddress(validatortypes.ModuleName)):      false,
+	mustConvertAndEncode(authtypes.NewModuleAddress(feetypes.BurningPool)):           false,
 }
 
 type EventAccumulator struct {
@@ -388,6 +419,53 @@ type EventSwapRedeem struct {
 	R                 string      `json:"r"`
 	S                 string      `json:"s"`
 	TxHash            string      `json:"txHash"`
+}
+
+type processFunc func(ea *EventAccumulator, event abci.Event, txHash string) error
+
+var eventProcessors = map[string]processFunc{
+	// coins
+	"decimal.coin.v1.EventCreateCoin":   processEventCreateCoin,
+	"decimal.coin.v1.EventUpdateCoin":   processEventUpdateCoin,
+	"decimal.coin.v1.EventUpdateCoinVR": processEventUpdateCoinVR,
+	"decimal.coin.v1.EventSendCoin":     processEventSendCoin,
+	"decimal.coin.v1.EventBuySellCoin":  processEventBuySellCoin,
+	"decimal.coin.v1.EventBurnCoin":     processEventBurnCoin,
+	"decimal.coin.v1.EventRedeemCheck":  processEventRedeemCheck,
+	// fee
+	"decimal.fee.v1.EventUpdateCoinPrices": processEventUpdatePrices,
+	"decimal.fee.v1.EventPayCommission":    processEventPayCommission,
+	// legacy
+	"decimal.legacy.v1.EventReturnLegacyCoins":    processEventReturnLegacyCoins,
+	"decimal.legacy.v1.EventReturnLegacySubToken": processEventReturnLegacySubToken,
+	"decimal.legacy.v1.EventReturnMultisigWallet": processEventReturnMultisigWallet,
+	// multisig
+	"decimal.multisig.v1.EventCreateWallet":       processEventCreateWallet,
+	"decimal.multisig.v1.EventCreateTransaction":  processEventCreateTransaction,
+	"decimal.multisig.v1.EventSignTransaction":    processEventSignTransaction,
+	"decimal.multisig.v1.EventConfirmTransaction": processEventConfirmTransaction,
+	// nft
+	"decimal.nft.v1.EventCreateCollection": processEventCreateCollection,
+	"decimal.nft.v1.EventUpdateCollection": processEventCreateCollection,
+	"decimal.nft.v1.EventCreateToken":      processEventCreateToken,
+	"decimal.nft.v1.EventMintToken":        processEventMintNFT,
+	"decimal.nft.v1.EventUpdateToken":      processEventUpdateToken,
+	"decimal.nft.v1.EventUpdateReserve":    processEventUpdateReserve,
+	"decimal.nft.v1.EventSendToken":        processEventSendNFT,
+	"decimal.nft.v1.EventBurnToken":        processEventBurnNFT,
+	// swap
+	"decimal.swap.v1.EventActivateChain":   processEventActivateChain,
+	"decimal.swap.v1.EventDeactivateChain": processEventDeactivateChain,
+	"decimal.swap.v1.EventInitializeSwap":  processEventSwapInitialize,
+	"decimal.swap.v1.EventRedeemSwap":      processEventSwapRedeem,
+	// validator
+	"decimal.validator.v1.EventDelegate":           processEventDelegate,
+	"decimal.validator.v1.EventUndelegateComplete": processEventUndelegateComplete,
+	"decimal.validator.v1.EventForceUndelegate":    processEventUndelegateComplete,
+	"decimal.validator.v1.EventRedelegateComplete": processEventRedelegateComplete,
+	"decimal.validator.v1.EventUpdateCoinsStaked":  processEventUpdateCoinsStaked,
+
+	banktypes.EventTypeTransfer: processEventTransfer,
 }
 
 func NewWorker(cdc params.EncodingConfig, logger log.Logger, config *Config) (*Worker, error) {
@@ -933,4 +1011,458 @@ func (w *Worker) parseEvents(events []abci.Event) []Event {
 		newEvents = append(newEvents, newEvent)
 	}
 	return newEvents
+}
+
+func (ea *EventAccumulator) AddEvent(event abci.Event, txHash string) error {
+	procFunc, ok := eventProcessors[event.Type]
+	if !ok {
+		return processStub(ea, event, txHash)
+	}
+	return procFunc(ea, event, txHash)
+}
+
+// stub to skip internal cosmos events
+func processStub(ea *EventAccumulator, event abci.Event, txHash string) error {
+	return nil
+}
+
+func processEventTransfer(ea *EventAccumulator, event abci.Event, txHash string) error {
+	var (
+		err        error
+		coins      sdk.Coins
+		sender     string
+		receipient string
+	)
+	for _, attr := range event.Attributes {
+		switch string(attr.Key) {
+		case banktypes.AttributeKeySender:
+			sender = string(attr.Value)
+		case banktypes.AttributeKeyRecipient:
+			receipient = string(attr.Value)
+		case sdk.AttributeKeyAmount:
+			coins, err = sdk.ParseCoinsNormalized(string(attr.Value))
+			if err != nil {
+				return fmt.Errorf("can't parse coins: %s, value: '%s'", err.Error(), string(attr.Value))
+			}
+		}
+	}
+
+	for _, coin := range coins {
+		if _, ok := pool[sender]; !ok {
+			ea.addBalanceChange(sender, coin.Denom, coin.Amount.Neg())
+		}
+		if _, ok := pool[receipient]; !ok {
+			ea.addBalanceChange(receipient, coin.Denom, coin.Amount)
+		}
+	}
+
+	return nil
+}
+
+// account balances
+// gathered from all transactions, amount can be negative
+func (ea *EventAccumulator) addBalanceChange(address string, symbol string, amount sdkmath.Int) {
+	balance, ok := ea.BalancesChanges[address]
+	if !ok {
+		ea.BalancesChanges[address] = map[string]sdkmath.Int{symbol: amount}
+		return
+	}
+	knownChange, ok := balance[symbol]
+	if !ok {
+		knownChange = sdkmath.ZeroInt()
+	}
+	balance[symbol] = knownChange.Add(amount)
+	ea.BalancesChanges[address] = balance
+}
+
+// decimal.coin.v1.EventCreateCoin
+func processEventCreateCoin(ea *EventAccumulator, event abci.Event, txHash string) error {
+	/*
+	  string sender = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+	  string denom = 2;
+	  string title = 3;
+	  uint32 crr = 4 [ (gogoproto.customname) = "CRR" ];
+	  string initial_volume = 5;
+	  string initial_reserve = 6;
+	  string limit_volume = 7;
+	  string identity = 8;
+	  string commission_create_coin = 9;
+	*/
+	var ecc EventCreateCoin
+	var err error
+	var ok bool
+	var sender string
+	//var commission sdk.Coin
+	for _, attr := range event.Attributes {
+		switch string(attr.Key) {
+		case "sender":
+			sender = string(attr.Value)
+			ecc.Creator = sender
+		case "denom":
+			ecc.Denom = string(attr.Value)
+		case "title":
+			ecc.Title = string(attr.Value)
+		case "identity":
+			ecc.Avatar = string(attr.Value)
+		case "crr":
+			ecc.CRR, err = strconv.ParseUint(string(attr.Value), 10, 64)
+			if err != nil {
+				return fmt.Errorf("can't parse crr '%s': %s", string(attr.Value), err.Error())
+			}
+		case "initial_volume":
+			ecc.Volume, ok = sdk.NewIntFromString(string(attr.Value))
+			if !ok {
+				return fmt.Errorf("can't parse initial_volume '%s'", string(attr.Value))
+			}
+		case "initial_reserve":
+			ecc.Reserve, ok = sdk.NewIntFromString(string(attr.Value))
+			if !ok {
+				return fmt.Errorf("can't parse initial_reserve '%s'", string(attr.Value))
+			}
+		case "limit_volume":
+			ecc.LimitVolume, ok = sdk.NewIntFromString(string(attr.Value))
+			if !ok {
+				return fmt.Errorf("can't parse limit_volume '%s'", string(attr.Value))
+			}
+			//case "commission_create_coin":
+			//	commission, err = sdk.ParseCoinNormalized(string(attr.Value))
+			//	if err != nil {
+			//		return fmt.Errorf("can't parse commission_create_coin '%s': %s", string(attr.Value), err.Error())
+		}
+	}
+	ecc.TxHash = txHash
+	//ea.addBalanceChange(sender, baseCoinSymbol, ecc.Reserve.Neg())
+	//ea.addBalanceChange(sender, ecc.Denom, ecc.Volume)
+	//ea.addBalanceChange(sender, commission.Denom, commission.Amount.Neg())
+
+	ea.CoinsCreates = append(ea.CoinsCreates, ecc)
+	return nil
+}
+
+// decimal.coin.v1.EventUpdateCoin
+func processEventUpdateCoin(ea *EventAccumulator, event abci.Event, txHash string) error {
+	/*
+	  string sender = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+	  string denom = 2;
+	  string limit_volume = 3;
+	  string identity = 4;
+	*/
+	var ok bool
+	var euc EventUpdateCoin
+	var denom string
+	for _, attr := range event.Attributes {
+		switch string(attr.Key) {
+		case "denom":
+			denom = string(attr.Value)
+		case "identity":
+			euc.Avatar = string(attr.Value)
+		case "limit_volume":
+			euc.LimitVolume, ok = sdk.NewIntFromString(string(attr.Value))
+			if !ok {
+				return fmt.Errorf("can't parse limit_volume '%s'", string(attr.Value))
+			}
+		}
+	}
+	ea.CoinUpdates[denom] = euc
+	return nil
+}
+
+// decimal.coin.v1.EventUpdateCoinVR
+func processEventUpdateCoinVR(ea *EventAccumulator, event abci.Event, txHash string) error {
+	/*
+	  string denom = 1;
+	  string volume = 2;
+	  string reserve = 3;
+	*/
+	var ok bool
+	var e UpdateCoinVR
+	var denom string
+	for _, attr := range event.Attributes {
+		switch string(attr.Key) {
+		case "denom":
+			denom = string(attr.Value)
+		case "volume":
+			e.Volume, ok = sdk.NewIntFromString(string(attr.Value))
+			if !ok {
+				return fmt.Errorf("can't parse volume '%s'", string(attr.Value))
+			}
+		case "reserve":
+			e.Reserve, ok = sdk.NewIntFromString(string(attr.Value))
+			if !ok {
+				return fmt.Errorf("can't parse reserve '%s'", string(attr.Value))
+			}
+		}
+	}
+
+	ea.addCoinVRChange(denom, e)
+	return nil
+}
+
+// decimal.coin.v1.EventSendCoin
+func processEventSendCoin(ea *EventAccumulator, event abci.Event, txHash string) error {
+	/*
+	  string sender = 1
+	  string recipient = 2
+	  string coin = 3;
+	*/
+	//var err error
+	//var sender, recipient string
+	//var coin sdk.Coin
+	//for _, attr := range event.Attributes {
+	//	switch string(attr.Key) {
+	//	case "sender":
+	//		sender = string(attr.Value)
+	//	case "recipient":
+	//		recipient = string(attr.Value)
+	//	case "coin":
+	//		coin, err = sdk.ParseCoinNormalized(string(attr.Value))
+	//		if err != nil {
+	//			return fmt.Errorf("can't parse coin '%s': %s", string(attr.Value), err.Error())
+	//		}
+	//	}
+	//}
+	//
+	//ea.addBalanceChange(sender, coin.Denom, coin.Amount.Neg())
+	//ea.addBalanceChange(recipient, coin.Denom, coin.Amount)
+	return nil
+}
+
+// decimal.coin.v1.EventBuySellCoin
+func processEventBuySellCoin(ea *EventAccumulator, event abci.Event, txHash string) error {
+	/*
+	  string sender = 1
+	  string coin_to_buy = 2;
+	  string coin_to_sell = 3;
+	  string amount_in_base_coin = 4;
+	*/
+	//var err error
+	//var sender string
+	//var coinToBuy, coinToSell sdk.Coin
+	//for _, attr := range event.Attributes {
+	//	switch string(attr.Key) {
+	//	case "sender":
+	//		sender = string(attr.Value)
+	//	case "coin_to_buy":
+	//		coinToBuy, err = sdk.ParseCoinNormalized(string(attr.Value))
+	//		if err != nil {
+	//			return fmt.Errorf("can't parse coin '%s': %s", string(attr.Value), err.Error())
+	//		}
+	//	case "coin_to_sell":
+	//		coinToSell, err = sdk.ParseCoinNormalized(string(attr.Value))
+	//		if err != nil {
+	//			return fmt.Errorf("can't parse coin '%s': %s", string(attr.Value), err.Error())
+	//		}
+	//	}
+	//}
+	//
+	//ea.addBalanceChange(sender, coinToBuy.Denom, coinToBuy.Amount)
+	//ea.addBalanceChange(sender, coinToSell.Denom, coinToSell.Amount.Neg())
+	return nil
+}
+
+// decimal.coin.v1.EventBurnCoin
+func processEventBurnCoin(ea *EventAccumulator, event abci.Event, txHash string) error {
+	/*
+	  string sender = 1
+	  string coin = 2;
+	*/
+	//var err error
+	//var sender string
+	//var coinToBurn sdk.Coin
+	//for _, attr := range event.Attributes {
+	//	switch string(attr.Key) {
+	//	case "sender":
+	//		sender = string(attr.Value)
+	//	case "coin":
+	//		coinToBurn, err = sdk.ParseCoinNormalized(string(attr.Value))
+	//		if err != nil {
+	//			return fmt.Errorf("can't parse coin '%s': %s", string(attr.Value), err.Error())
+	//		}
+	//	}
+	//}
+
+	//ea.addBalanceChange(sender, coinToBurn.Denom, coinToBurn.Amount.Neg())
+	return nil
+}
+
+// decimal.coin.v1.EventRedeemCheck
+func processEventRedeemCheck(ea *EventAccumulator, event abci.Event, txHash string) error {
+	/*
+	  string sender = 1
+	  string issuer = 2
+	  string coin = 3;
+	  string nonce = 4;
+	  string due_block = 5;
+	  string commission_redeem_check = 6;
+	*/
+	//var err error
+	//var sender, issuer string
+	//var coin, commission sdk.Coin
+	//for _, attr := range event.Attributes {
+	//	if string(attr.Key) == "sender" {
+	//		sender = string(attr.Value)
+	//	}
+	//	if string(attr.Key) == "issuer" {
+	//		issuer = string(attr.Value)
+	//	}
+	//	if string(attr.Key) == "coin" {
+	//		coin, err = sdk.ParseCoinNormalized(string(attr.Value))
+	//		if err != nil {
+	//			return fmt.Errorf("can't parse coin '%s': %s", string(attr.Value), err.Error())
+	//		}
+	//	}
+	//	if string(attr.Key) == "commission_redeem_check" {
+	//		commission, err = sdk.ParseCoinNormalized(string(attr.Value))
+	//		if err != nil {
+	//			return fmt.Errorf("can't parse commission_redeem_check '%s': %s", string(attr.Value), err.Error())
+	//		}
+	//	}
+	//}
+
+	//ea.addBalanceChange(sender, coin.Denom, coin.Amount)
+	//ea.addBalanceChange(issuer, coin.Denom, coin.Amount.Neg())
+	//ea.addBalanceChange(issuer, commission.Denom, commission.Amount.Neg())
+	return nil
+}
+
+func mustConvertAndEncode(address sdk.AccAddress) string {
+	res, err := bech32.ConvertAndEncode(cmdcfg.Bech32PrefixAccAddr, address)
+	if err != nil {
+		panic(err)
+	}
+
+	return res
+}
+
+func processEventUpdatePrices(ea *EventAccumulator, event abci.Event, txHash string) error {
+	/*
+		string oracle = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+		repeated CoinPrice prices = 2 [ (gogoproto.nullable) = false ];
+	*/
+
+	// TODO this event need handle?
+
+	return nil
+}
+
+// decimal.fee.v1.EventPayCommission
+func processEventPayCommission(ea *EventAccumulator, event abci.Event, txHash string) error {
+	/*
+	  string payer = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+	  repeated cosmos.base.v1beta1.Coin coins = 2
+	  [ (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false ];
+	*/
+	var (
+		err   error
+		coins sdk.Coins
+		burnt sdk.Coins
+		e     EventPayCommission
+	)
+	for _, attr := range event.Attributes {
+		switch string(attr.Key) {
+		case "payer":
+			e.Payer = string(attr.Value)
+		case "coins":
+			err = json.Unmarshal(attr.Value, &coins)
+			if err != nil {
+				return fmt.Errorf("can't unmarshal coins: %s, value: '%s'", err.Error(), string(attr.Value))
+			}
+		case "burnt":
+			err = json.Unmarshal(attr.Value, &burnt)
+			if err != nil {
+				return fmt.Errorf("can't unmarshal burnt coins: %s, value: '%s'", err.Error(), string(attr.Value))
+			}
+		}
+	}
+
+	e.Coins = coins
+	e.TxHash = txHash
+	e.Burnt = burnt
+	ea.PayCommission = append(ea.PayCommission, e)
+	return nil
+
+}
+
+// decimal.legacy.v1.EventReturnLegacyCoins
+func processEventReturnLegacyCoins(ea *EventAccumulator, event abci.Event, txHash string) error {
+	/*
+	  string legacy_owner = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+	  string owner = 2 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+	  repeated cosmos.base.v1beta1.Coin coins = 3 [
+	    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+	    (gogoproto.nullable) = false
+	  ];
+	*/
+	var err error
+	var oldAddress, newAddress string
+	var coins sdk.Coins
+	for _, attr := range event.Attributes {
+		switch string(attr.Key) {
+		case "legacy_owner":
+			oldAddress = string(attr.Value)
+		case "owner":
+			newAddress = string(attr.Value)
+		case "coins":
+			err = json.Unmarshal(attr.Value, &coins)
+			if err != nil {
+				return fmt.Errorf("can't parse coins '%s': %s", string(attr.Value), err.Error())
+			}
+		}
+	}
+	//for _, coin := range coins {
+	//ea.addBalanceChange(newAddress, coin.Denom, coin.Amount)
+	//}
+	ea.LegacyReown[oldAddress] = newAddress
+	return nil
+
+}
+
+// decimal.legacy.v1.EventReturnLegacySubToken
+func processEventReturnLegacySubToken(ea *EventAccumulator, event abci.Event, txHash string) error {
+	/*
+	  string legacy_owner = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+	  string owner = 2 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+	  string denom = 3;
+	  string id = 4 [ (gogoproto.customname) = "ID" ];
+	  repeated uint32 sub_token_ids = 5 [ (gogoproto.customname) = "SubTokenIDs" ];
+	*/
+	var ret LegacyReturnNFT
+	for _, attr := range event.Attributes {
+		switch string(attr.Key) {
+		case "legacy_owner":
+			ret.LegacyOwner = string(attr.Value)
+		case "owner":
+			ret.Owner = string(attr.Value)
+		case "denom":
+			ret.Denom = string(attr.Value)
+		case "id":
+			ret.ID = string(attr.Value)
+		}
+	}
+	ea.LegacyReturnNFT = append(ea.LegacyReturnNFT, ret)
+	return nil
+
+}
+
+// decimal.legacy.v1.EventReturnMultisigWallet
+func processEventReturnMultisigWallet(ea *EventAccumulator, event abci.Event, txHash string) error {
+	/*
+	  string legacy_owner = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+	  string owner = 2 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+	  string wallet = 3 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+	*/
+	var ret LegacyReturnWallet
+	for _, attr := range event.Attributes {
+		switch string(attr.Key) {
+		case "legacy_owner":
+			ret.LegacyOwner = string(attr.Value)
+		case "owner":
+			ret.Owner = string(attr.Value)
+		case "wallet":
+			ret.Wallet = string(attr.Value)
+		}
+	}
+	ea.LegacyReturnWallet = append(ea.LegacyReturnWallet, ret)
+	return nil
+
 }
