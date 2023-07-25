@@ -2,15 +2,12 @@ package api_fondation
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"math/big"
 	"net/http"
-	"os"
 	"strconv"
-	"sync"
 	"time"
 
 	sdkmath "cosmossdk.io/math"
@@ -39,36 +36,20 @@ import (
 	web3common "github.com/ethereum/go-ethereum/common"
 	web3hexutil "github.com/ethereum/go-ethereum/common/hexutil"
 	web3types "github.com/ethereum/go-ethereum/core/types"
-	web3 "github.com/ethereum/go-ethereum/ethclient"
 	ethrpc "github.com/ethereum/go-ethereum/rpc"
 
-	"github.com/cosmos/cosmos-sdk/simapp/params"
-	"github.com/tendermint/tendermint/libs/log"
-
-	rpc "github.com/tendermint/tendermint/rpc/client/http"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
-	TxReceiptsBatchSize = 16
-	RequestTimeout      = 16 * time.Second
-	RequestRetryDelay   = 32 * time.Millisecond
+	RequestTimeout    = 16 * time.Second
+	RequestRetryDelay = 32 * time.Millisecond
 	// Bech32Prefix defines the Bech32 prefix used for EthAccounts
 	Bech32Prefix = "d0"
 	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address
 	Bech32PrefixAccAddr = Bech32Prefix
-	// Bech32PrefixAccPub defines the Bech32 prefix of an account's public key
-	Bech32PrefixAccPub = Bech32Prefix + sdk.PrefixPublic
-	// Bech32PrefixValAddr defines the Bech32 prefix of a validator's operator address
-	Bech32PrefixValAddr = Bech32Prefix + sdk.PrefixValidator + sdk.PrefixOperator
-	// Bech32PrefixValPub defines the Bech32 prefix of a validator's operator public key
-	Bech32PrefixValPub = Bech32Prefix + sdk.PrefixValidator + sdk.PrefixOperator + sdk.PrefixPublic
-	// Bech32PrefixConsAddr defines the Bech32 prefix of a consensus node address
-	Bech32PrefixConsAddr = Bech32Prefix + sdk.PrefixValidator + sdk.PrefixConsensus
-	// Bech32PrefixConsPub defines the Bech32 prefix of a consensus node public key
-	Bech32PrefixConsPub = Bech32Prefix + sdk.PrefixValidator + sdk.PrefixConsensus + sdk.PrefixPublic
 
 	evmtypesModuleName        = "evm"
 	cointypesModuleName       = "coin"
@@ -139,75 +120,7 @@ var eventProcessors = map[string]processFunc{
 	banktypes.EventTypeTransfer: processEventTransfer,
 }
 
-func NewWorker(cdc params.EncodingConfig, logger log.Logger, config *Config) (*Worker, error) {
-	hostname, err := os.Hostname()
-	if err != nil {
-		return nil, err
-	}
-	httpClient := &http.Client{}
-	rpcClient, err := rpc.NewWithClient(config.RpcEndpoint, config.RpcEndpoint, httpClient)
-	if err != nil {
-		return nil, err
-	}
-	web3Client, err := web3.Dial(config.Web3Endpoint)
-	if err != nil {
-		return nil, err
-	}
-	web3ChainId, err := web3Client.ChainID(context.Background())
-	if err != nil {
-		return nil, err
-	}
-	ethRpcClient, err := ethrpc.Dial(config.Web3Endpoint)
-	if err != nil {
-		return nil, err
-	}
-	worker := &Worker{
-		ctx:          context.Background(),
-		httpClient:   httpClient,
-		cdc:          cdc,
-		logger:       logger,
-		config:       config,
-		hostname:     hostname,
-		rpcClient:    rpcClient,
-		web3Client:   web3Client,
-		web3ChainId:  web3ChainId,
-		ethRpcClient: ethRpcClient,
-		query:        make(chan *ParseTask, 1000),
-	}
-	return worker, nil
-}
-
-func (w *Worker) Start() {
-	wg := &sync.WaitGroup{}
-	wg.Add(w.config.WorkersCount)
-	for i := 0; i < w.config.WorkersCount; i++ {
-		go w.executeFromQuery(wg)
-	}
-	wg.Wait()
-}
-
-func (w *Worker) executeFromQuery(wg *sync.WaitGroup) {
-	defer wg.Done()
-	for {
-
-		// Determine number of work to retrieve from the node
-		w.getWork()
-
-		// Retrieve block result from the node and prepare it for the indexer service
-		task := <-w.query
-		block := w.GetBlockResult(task.height, task.txNum)
-		if block == nil {
-			continue
-		}
-
-		// Send retrieved block result from the  indexer service
-		data, err := json.Marshal(*block)
-		w.panicError(err)
-		w.sendBlock(task.height, data)
-	}
-}
-
-func (w *Worker) GetBlockResult(height int64, txNum int) *Block {
+func (w *Worker) GetBlockResult(height int64) *Block {
 	accum := NewEventAccumulator()
 
 	w.logger.Info("Retrieving block results...", "block", height)
@@ -249,7 +162,7 @@ func (w *Worker) GetBlockResult(height int64, txNum int) *Block {
 			From:             msg.From(),
 			To:               msg.To(),
 			Value:            (*web3hexutil.Big)(msg.Value()),
-			Data:             web3hexutil.Bytes(msg.Data()),
+			Data:             msg.Data(),
 			Gas:              web3hexutil.Uint64(msg.Gas()),
 			GasPrice:         (*web3hexutil.Big)(msg.GasPrice()),
 			ChainId:          (*web3hexutil.Big)(tx.ChainId()),
