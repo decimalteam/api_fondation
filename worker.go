@@ -13,6 +13,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dustin/go-humanize"
+	"github.com/status-im/keycard-go/hexutils"
+
 	web3common "github.com/ethereum/go-ethereum/common"
 	web3hexutil "github.com/ethereum/go-ethereum/common/hexutil"
 	web3types "github.com/ethereum/go-ethereum/core/types"
@@ -26,6 +29,12 @@ import (
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
+const (
+	TxReceiptsBatchSize = 16
+	RequestTimeout      = 16 * time.Second
+	RequestRetryDelay   = 32 * time.Millisecond
 )
 
 type Worker struct {
@@ -330,7 +339,7 @@ func (w *Worker) GetBlockResult(height int64, txNum int) *Block {
 	}
 
 	w.logger.Info(
-		fmt.Sprintf("Compiled block (%s)", helpers.DurationToString(time.Since(start))),
+		fmt.Sprintf("Compiled block (%s)", DurationToString(time.Since(start))),
 		"block", height,
 		"txs", len(txs),
 		"begin-block-events", len(results.BeginBlockEvents),
@@ -425,7 +434,7 @@ func (w *Worker) sendBlock(height int64, json []byte) {
 			return
 		} else {
 			w.logger.Info(
-				fmt.Sprintf("Block is successfully sent (%s)", helpers.DurationToString(time.Since(start))),
+				fmt.Sprintf("Block is successfully sent (%s)", DurationToString(time.Since(start))),
 				"block", height,
 			)
 			// Parse response
@@ -468,12 +477,12 @@ func (w *Worker) fetchBlock(height int64) *ctypes.ResultBlock {
 		if err == nil {
 			if !first {
 				w.logger.Info(
-					fmt.Sprintf("Fetched block (after %s)", helpers.DurationToString(time.Since(start))),
+					fmt.Sprintf("Fetched block (after %s)", DurationToString(time.Since(start))),
 					"block", height,
 				)
 			} else {
 				w.logger.Info(
-					fmt.Sprintf("Fetched block (%s)", helpers.DurationToString(time.Since(start))),
+					fmt.Sprintf("Fetched block (%s)", DurationToString(time.Since(start))),
 					"block", height,
 				)
 			}
@@ -571,4 +580,88 @@ func (w *Worker) fetchBlockWeb3(height int64, ch chan *web3types.Block) {
 
 	// Send result to the channel
 	ch <- result
+}
+
+func (w *Worker) fetchBlockTxReceiptsWeb3(block *web3types.Block, ch chan web3types.Receipts) {
+	txCount := len(block.Transactions())
+	results := make(web3types.Receipts, txCount)
+	requests := make([]ethrpc.BatchElem, txCount)
+	if txCount == 0 {
+		ch <- results
+		return
+	}
+
+	// NOTE: Try to retrieve tx receipts in the loop since it looks like there is some delay before receipts are ready to by retrieved
+	for c := 1; true; c++ {
+		if c > 5 {
+			w.logger.Debug(fmt.Sprintf("%d attempt to fetch transaction receipts with height: %d, time %s", c, block.NumberU64(), time.Now().String()))
+		}
+		// Prepare batch requests to retrieve the receipt for each transaction in the block
+		for i, tx := range block.Transactions() {
+			results[i] = &web3types.Receipt{}
+			requests[i] = ethrpc.BatchElem{
+				Method: "eth_getTransactionReceipt",
+				Args:   []interface{}{tx.Hash()},
+				Result: results[i],
+			}
+		}
+		// Request transaction receipts with a batch
+		err := w.ethRpcClient.BatchCall(requests[:])
+		if err == nil {
+			// Ensure all transaction receipts are retrieved
+			for i := range requests {
+				txHash := requests[i].Args[0].(web3common.Hash)
+				if requests[i].Error != nil {
+					err = requests[i].Error
+					if c > 5 {
+						w.logger.Error(fmt.Sprintf("Error: %v", err))
+					}
+					continue
+				}
+				if results[i].BlockNumber == nil || results[i].BlockNumber.Sign() == 0 {
+					err = fmt.Errorf("got null result for tx with hash %v", txHash)
+					if c > 5 {
+						w.logger.Error(fmt.Sprintf("Error: %v", err))
+					}
+				}
+			}
+		}
+		if err == nil {
+			break
+		}
+		// Sleep some time before next try
+		time.Sleep(RequestRetryDelay)
+	}
+
+	// Send results to the channel
+	ch <- results
+}
+
+// DurationToString converts provided duration to human readable string presentation.
+func DurationToString(d time.Duration) string {
+	ns := time.Duration(d.Nanoseconds())
+	ms := float64(ns) / 1000000.0
+	var unit string
+	var amount string
+	if ns < time.Microsecond {
+		amount, unit = humanize.CommafWithDigits(float64(ns), 0), "ns"
+	} else if ns < time.Millisecond {
+		amount, unit = humanize.CommafWithDigits(ms*1000.0, 3), "μs"
+	} else if ns < time.Second {
+		amount, unit = humanize.CommafWithDigits(ms, 3), "ms"
+	} else if ns < time.Minute {
+		amount, unit = humanize.CommafWithDigits(ms/1000.0, 3), "s"
+	} else if ns < time.Hour {
+		amount, unit = humanize.CommafWithDigits(ms/60000.0, 3), "m"
+	} else if ns < 24*time.Hour {
+		amount, unit = humanize.CommafWithDigits(ms/3600000.0, 3), "h"
+	} else {
+		days := ms / 86400000.0
+		unit = "day"
+		if days > 1 {
+			unit = "days"
+		}
+		amount = humanize.CommafWithDigits(days, 3)
+	}
+	return fmt.Sprintf("%s %s", amount, unit)
 }
