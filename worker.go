@@ -20,16 +20,16 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	//evmtypes "github.com/evmos/ethermint/x/evm/types"
 
 	// Decimal modules
 
-	cointypes "bitbucket.org/decimalteam/go-smart-node/x/coin/types"
-	feetypes "bitbucket.org/decimalteam/go-smart-node/x/fee/types"
-	legacytypes "bitbucket.org/decimalteam/go-smart-node/x/legacy/types"
-	nfttypes "bitbucket.org/decimalteam/go-smart-node/x/nft/types"
-	swaptypes "bitbucket.org/decimalteam/go-smart-node/x/swap/types"
-	validatortypes "bitbucket.org/decimalteam/go-smart-node/x/validator/types"
+	//cointypes "bitbucket.org/decimalteam/go-smart-node/x/coin/types"
+	//feetypes "bitbucket.org/decimalteam/go-smart-node/x/fee/types"
+	//legacytypes "bitbucket.org/decimalteam/go-smart-node/x/legacy/types"
+	//nfttypes "bitbucket.org/decimalteam/go-smart-node/x/nft/types"
+	//swaptypes "bitbucket.org/decimalteam/go-smart-node/x/swap/types"
+	//validatortypes "bitbucket.org/decimalteam/go-smart-node/x/validator/types"
 
 	"github.com/dustin/go-humanize"
 	"github.com/status-im/keycard-go/hexutils"
