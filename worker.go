@@ -161,6 +161,10 @@ type TransactionEVM struct {
 	GasFeeCap  *web3hexutil.Big     `json:"maxFeePerGas,omitempty"`         // EIP-1559 dynamic fee transactions
 }
 
+type FailedTxLog struct {
+	Log string `json:"log"`
+}
+
 func NewWorker(cdc params.EncodingConfig, logger log.Logger, config *Config) (*Worker, error) {
 	hostname, err := os.Hostname()
 	if err != nil {
@@ -664,4 +668,26 @@ func DurationToString(d time.Duration) string {
 		amount = humanize.CommafWithDigits(days, 3)
 	}
 	return fmt.Sprintf("%s %s", amount, unit)
+}
+
+func (w *Worker) parseTxInfo(tx sdk.Tx) (txInfo TxInfo) {
+	if tx == nil {
+		return
+	}
+	for _, rawMsg := range tx.GetMsgs() {
+		params := make(map[string]interface{})
+		err := json.Unmarshal(w.cdc.Codec.MustMarshalJSON(rawMsg), &params)
+		w.panicError(err)
+		var msg TxMsg
+		msg.Type = sdk.MsgTypeURL(rawMsg)
+		msg.Params = params
+		for _, signer := range rawMsg.GetSigners() {
+			msg.From = append(msg.From, signer.String())
+		}
+		txInfo.Msgs = append(txInfo.Msgs, msg)
+	}
+	txInfo.Fee.Gas = tx.(sdk.FeeTx).GetGas()
+	txInfo.Fee.Amount = tx.(sdk.FeeTx).GetFee()
+	txInfo.Memo = tx.(sdk.TxWithMemo).GetMemo()
+	return
 }
