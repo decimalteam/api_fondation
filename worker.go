@@ -95,7 +95,7 @@ type Block struct {
 	Size              int                `json:"size"`
 	EVM               BlockEVM           `json:"evm"`
 	//TODO: add EventAccumulator
-	StateChanges      EventAccumulator   `json:"state_changes"`
+	//StateChanges      EventAccumulator   `json:"state_changes"`
 }
 
 type BlockData struct {
