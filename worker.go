@@ -207,6 +207,14 @@ const cointypesModuleName = "coin"
 
 const nfttypesReservedPool = "reserved_pool"
 
+const legacytypesLegacyCoinPool = "legacy_coin_pool"
+
+const swaptypesSwapPool = "atomic_swap_pool"
+
+const validatortypesModuleName = "validator"
+
+const feetypesBurningPool = "burning_pool"
+
 var pool = map[string]bool{
 	mustConvertAndEncode(authtypes.NewModuleAddress(authtypes.FeeCollectorName)):     false,
 	mustConvertAndEncode(authtypes.NewModuleAddress(distrtypes.ModuleName)):          false,
