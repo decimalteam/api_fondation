@@ -15,6 +15,7 @@ import (
 
 	"github.com/dustin/go-humanize"
 	"github.com/status-im/keycard-go/hexutils"
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	web3common "github.com/ethereum/go-ethereum/common"
 	web3hexutil "github.com/ethereum/go-ethereum/common/hexutil"
@@ -104,7 +105,7 @@ type Block struct {
 	Size              int                `json:"size"`
 	EVM               BlockEVM           `json:"evm"`
 	//TODO: add EventAccumulator
-	//StateChanges      EventAccumulator   `json:"state_changes"`
+	StateChanges EventAccumulator `json:"state_changes"`
 }
 
 type BlockData struct {
@@ -690,4 +691,22 @@ func (w *Worker) parseTxInfo(tx sdk.Tx) (txInfo TxInfo) {
 	txInfo.Fee.Amount = tx.(sdk.FeeTx).GetFee()
 	txInfo.Memo = tx.(sdk.TxWithMemo).GetMemo()
 	return
+}
+
+func (w *Worker) parseEvents(events []abci.Event) []Event {
+	var newEvents []Event
+	for _, ev := range events {
+		newEvent := Event{
+			Type:       ev.Type,
+			Attributes: []Attribute{},
+		}
+		for _, attr := range ev.Attributes {
+			newEvent.Attributes = append(newEvent.Attributes, Attribute{
+				Key:   string(attr.Key),
+				Value: string(attr.Value),
+			})
+		}
+		newEvents = append(newEvents, newEvent)
+	}
+	return newEvents
 }
