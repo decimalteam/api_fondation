@@ -20,6 +20,7 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	//evmtypes "github.com/evmos/ethermint/x/evm/types"
 
 	// Decimal modules
@@ -200,19 +201,25 @@ type FailedTxLog struct {
 	Log string `json:"log"`
 }
 
+const evmtypesModuleName = "evm"
+
+const cointypesModuleName = "coin"
+
+const nfttypesReservedPool = "reserved_pool"
+
 var pool = map[string]bool{
 	mustConvertAndEncode(authtypes.NewModuleAddress(authtypes.FeeCollectorName)):     false,
 	mustConvertAndEncode(authtypes.NewModuleAddress(distrtypes.ModuleName)):          false,
 	mustConvertAndEncode(authtypes.NewModuleAddress(stakingtypes.BondedPoolName)):    false,
 	mustConvertAndEncode(authtypes.NewModuleAddress(stakingtypes.NotBondedPoolName)): false,
 	mustConvertAndEncode(authtypes.NewModuleAddress(govtypes.ModuleName)):            false,
-	mustConvertAndEncode(authtypes.NewModuleAddress(evmtypes.ModuleName)):            false,
-	mustConvertAndEncode(authtypes.NewModuleAddress(cointypes.ModuleName)):           false,
-	mustConvertAndEncode(authtypes.NewModuleAddress(nfttypes.ReservedPool)):          false,
-	mustConvertAndEncode(authtypes.NewModuleAddress(legacytypes.LegacyCoinPool)):     false,
-	mustConvertAndEncode(authtypes.NewModuleAddress(swaptypes.SwapPool)):             false,
-	mustConvertAndEncode(authtypes.NewModuleAddress(validatortypes.ModuleName)):      false,
-	mustConvertAndEncode(authtypes.NewModuleAddress(feetypes.BurningPool)):           false,
+	mustConvertAndEncode(authtypes.NewModuleAddress(evmtypesModuleName)):             false,
+	mustConvertAndEncode(authtypes.NewModuleAddress(cointypesModuleName)):            false,
+	mustConvertAndEncode(authtypes.NewModuleAddress(nfttypesReservedPool)):           false,
+	mustConvertAndEncode(authtypes.NewModuleAddress(legacytypesLegacyCoinPool)):      false,
+	mustConvertAndEncode(authtypes.NewModuleAddress(swaptypesSwapPool)):              false,
+	mustConvertAndEncode(authtypes.NewModuleAddress(validatortypesModuleName)):       false,
+	mustConvertAndEncode(authtypes.NewModuleAddress(feetypesBurningPool)):            false,
 }
 
 type EventAccumulator struct {
