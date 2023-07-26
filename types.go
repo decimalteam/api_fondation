@@ -203,15 +203,6 @@ type EventCreateCoin struct {
 	// ? burn
 }
 
-func NewEventAccumulator() *EventAccumulator {
-	return &EventAccumulator{
-		BalancesChanges: make(map[string]map[string]sdkmath.Int),
-		CoinUpdates:     make(map[string]EventUpdateCoin),
-		CoinsVR:         make(map[string]UpdateCoinVR),
-		CoinsStaked:     make(map[string]sdkmath.Int),
-		LegacyReown:     make(map[string]string),
-	}
-}
 
 type EventPayCommission struct {
 	Payer  string    `json:"payer"`

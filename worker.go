@@ -597,14 +597,6 @@ func (w *Worker) parseEvents(events []abci.Event) []Event {
 	return newEvents
 }
 
-func (ea *EventAccumulator) AddEvent(event abci.Event, txHash string) error {
-	procFunc, ok := eventProcessors[event.Type]
-	if !ok {
-		return processStub(ea, event, txHash)
-	}
-	return procFunc(ea, event, txHash)
-}
-
 // stub to skip internal cosmos events
 func processStub(ea *EventAccumulator, event abci.Event, txHash string) error {
 	return nil
@@ -643,38 +635,6 @@ func processEventTransfer(ea *EventAccumulator, event abci.Event, txHash string)
 	return nil
 }
 
-// account balances
-// gathered from all transactions, amount can be negative
-func (ea *EventAccumulator) addBalanceChange(address string, symbol string, amount sdkmath.Int) {
-	balance, ok := ea.BalancesChanges[address]
-	if !ok {
-		ea.BalancesChanges[address] = map[string]sdkmath.Int{symbol: amount}
-		return
-	}
-	knownChange, ok := balance[symbol]
-	if !ok {
-		knownChange = sdkmath.ZeroInt()
-	}
-	balance[symbol] = knownChange.Add(amount)
-	ea.BalancesChanges[address] = balance
-}
-
-// custom coin reserve or volume update
-func (ea *EventAccumulator) addCoinVRChange(symbol string, vr UpdateCoinVR) {
-	ea.CoinsVR[symbol] = vr
-}
-
-func (ea *EventAccumulator) addMintSubTokens(e EventMintToken) {
-	ea.MintSubTokens = append(ea.MintSubTokens, e)
-}
-
-func (ea *EventAccumulator) addBurnSubTokens(e EventBurnToken) {
-	ea.BurnSubTokens = append(ea.BurnSubTokens, e)
-}
-
-func (ea *EventAccumulator) addCoinsStaked(e EventUpdateCoinsStaked) {
-	ea.CoinsStaked[e.denom] = e.amount
-}
 
 // decimal.coin.v1.EventCreateCoin
 func processEventCreateCoin(ea *EventAccumulator, event abci.Event, txHash string) error {
