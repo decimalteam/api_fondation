@@ -5,12 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
-	"net/http"
 	"os"
 	"strconv"
 	"time"
 
 	web3 "github.com/ethereum/go-ethereum/ethclient"
+	"github.com/valyala/fasthttp"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
@@ -278,8 +278,8 @@ func getHostName() (string, error) {
 	return hostname, nil
 }
 
-func getHttpClient() *http.Client {
-	return &http.Client{}
+func GetHttpClient() *fasthttp.Client {
+	return &fasthttp.Client{}
 }
 
 func getWeb3Client(config *Config) (*web3.Client, error) {
