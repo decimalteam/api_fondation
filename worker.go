@@ -300,6 +300,15 @@ func getWeb3ChainId(ctx context.Context, web3Client *web3.Client) (*big.Int, err
 	return web3ChainId, nil
 }
 
+func GetRpcClient(config *Config, httpClient *fasthttp.Client) {
+	rpcClient, err := rpc.NewWithClient(config.RpcEndpoint, config.RpcEndpoint, httpClient)
+	if err != nil {
+		return nil, err
+	}
+
+	return rpcClient, nil
+}
+
 func (w *Worker) fetchBlock(height int64) *ctypes.ResultBlock {
 	// Request until get block
 	for first, start, deadline := true, time.Now(), time.Now().Add(RequestTimeout); true; first = false {
