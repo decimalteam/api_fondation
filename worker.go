@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"net/rpc"
 	"os"
 	"strconv"
 	"time"
@@ -300,13 +301,22 @@ func getWeb3ChainId(ctx context.Context, web3Client *web3.Client) (*big.Int, err
 	return web3ChainId, nil
 }
 
-func GetRpcClient(config *Config, httpClient *fasthttp.Client) {
+func GetRpcClient(config *Config, httpClient *fasthttp.Client) *rpc.Client {
 	rpcClient, err := rpc.NewWithClient(config.RpcEndpoint, config.RpcEndpoint, httpClient)
 	if err != nil {
 		return nil, err
 	}
 
 	return rpcClient, nil
+}
+
+func GetEthRpcClient(config *Config) (*ethrpc.Client, error) {
+	ethRpcClient, err := ethrpc.Dial(config.Web3Endpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	return ethRpcClient, nil
 }
 
 func (w *Worker) fetchBlock(height int64) *ctypes.ResultBlock {
