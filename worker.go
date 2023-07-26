@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"math/big"
 	"net/http"
 	"os"
@@ -299,38 +298,6 @@ func getWeb3ChainId(ctx context.Context, web3Client *web3.Client) (*big.Int, err
 	}
 
 	return web3ChainId, nil
-}
-
-func (w *Worker) getWork() {
-	// Uncomment for test purposes
-	// w.query <- &ParseTask{
-	// 	height: 319229,
-	// 	txNum:  -1,
-	// }
-	// return
-
-	// Prepare request
-	url := fmt.Sprintf("%s/getWork", w.config.IndexerEndpoint)
-	req, err := http.NewRequest("GET", url, nil)
-	w.panicError(err)
-	req.Header.Set("X-Worker", w.hostname)
-
-	// Perform request
-	resp, err := w.httpClient.Do(req)
-	w.panicError(err)
-	defer resp.Body.Close()
-
-	// Parse response
-	bodyBytes, err := io.ReadAll(resp.Body)
-	w.panicError(err)
-	height, err := strconv.Atoi(string(bodyBytes))
-	w.panicError(err)
-
-	// Send work to the channel
-	w.query <- &ParseTask{
-		height: int64(height),
-		txNum:  -1,
-	}
 }
 
 func (w *Worker) fetchBlock(height int64) *ctypes.ResultBlock {
