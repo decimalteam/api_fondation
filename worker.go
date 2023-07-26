@@ -293,7 +293,7 @@ func GetWeb3Client(config *Config) (*web3.Client, error) {
 	return web3Client, nil
 }
 
-func getWeb3ChainId(ctx context.Context, web3Client *web3.Client) (*big.Int, error) {
+func getWeb3ChainId(web3Client *web3.Client) (*big.Int, error) {
 	web3ChainId, err := web3Client.ChainID(context.Background())
 	if err != nil {
 		return nil, err
