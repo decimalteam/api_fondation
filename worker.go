@@ -1,13 +1,17 @@
 package api_fondation
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"math/big"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
+
+	web3 "github.com/ethereum/go-ethereum/ethclient"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
@@ -264,6 +268,37 @@ func (w *Worker) panicError(err error) {
 		w.logger.Error(fmt.Sprintf("Error: %v", err))
 		panic(err)
 	}
+}
+
+func getHostName() (string, error) {
+	hostname, err := os.Hostname()
+	if err != nil {
+		return "", err
+	}
+
+	return hostname, nil
+}
+
+func getHttpClient() *http.Client {
+	return &http.Client{}
+}
+
+func getWeb3Client(config *Config) (*web3.Client, error) {
+	web3Client, err := web3.Dial(config.Web3Endpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	return web3Client, nil
+}
+
+func getWeb3ChainId(ctx context.Context, web3Client *web3.Client) (*big.Int, error) {
+	web3ChainId, err := web3Client.ChainID(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	return web3ChainId, nil
 }
 
 func (w *Worker) getWork() {
