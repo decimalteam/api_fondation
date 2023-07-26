@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
-	"net/rpc"
+	"net/http"
 	"os"
 	"strconv"
 	"time"
 
 	web3 "github.com/ethereum/go-ethereum/ethclient"
+	rpc "github.com/tendermint/tendermint/rpc/client/http"
 	"github.com/valyala/fasthttp"
 
 	sdkmath "cosmossdk.io/math"
@@ -301,7 +302,7 @@ func getWeb3ChainId(ctx context.Context, web3Client *web3.Client) (*big.Int, err
 	return web3ChainId, nil
 }
 
-func GetRpcClient(config *Config, httpClient *fasthttp.Client) *rpc.Client {
+func GetRpcClient(config *Config, httpClient *http.Client) (*rpc.HTTP, error) {
 	rpcClient, err := rpc.NewWithClient(config.RpcEndpoint, config.RpcEndpoint, httpClient)
 	if err != nil {
 		return nil, err
