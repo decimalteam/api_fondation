@@ -282,7 +282,7 @@ func GetHttpClient() *fasthttp.Client {
 	return &fasthttp.Client{}
 }
 
-func getWeb3Client(config *Config) (*web3.Client, error) {
+func GetWeb3Client(config *Config) (*web3.Client, error) {
 	web3Client, err := web3.Dial(config.Web3Endpoint)
 	if err != nil {
 		return nil, err
