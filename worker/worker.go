@@ -1,4 +1,4 @@
-package api_fondation
+package worker
 
 import (
 	"api_fondation/events"

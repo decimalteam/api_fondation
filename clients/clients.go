@@ -1,7 +1,7 @@
 package clients
 
 import (
-	"api_fondation"
+	"api_fondation/worker"
 	"context"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
@@ -25,7 +25,7 @@ func GetHttpClient() *fasthttp.Client {
 	return &fasthttp.Client{}
 }
 
-func GetWeb3Client(config *api_fondation.Config) (*ethclient.Client, error) {
+func GetWeb3Client(config *worker.Config) (*ethclient.Client, error) {
 	web3Client, err := ethclient.Dial(config.Web3Endpoint)
 	if err != nil {
 		return nil, err
@@ -43,7 +43,7 @@ func getWeb3ChainId(web3Client *ethclient.Client) (*big.Int, error) {
 	return web3ChainId, nil
 }
 
-func GetRpcClient(config *api_fondation.Config, httpClient *http.Client) (*http2.HTTP, error) {
+func GetRpcClient(config *worker.Config, httpClient *http.Client) (*http2.HTTP, error) {
 	rpcClient, err := http2.NewWithClient(config.RpcEndpoint, config.RpcEndpoint, httpClient)
 	if err != nil {
 		return nil, err
@@ -52,7 +52,7 @@ func GetRpcClient(config *api_fondation.Config, httpClient *http.Client) (*http2
 	return rpcClient, nil
 }
 
-func GetEthRpcClient(config *api_fondation.Config) (*rpc.Client, error) {
+func GetEthRpcClient(config *worker.Config) (*rpc.Client, error) {
 	ethRpcClient, err := rpc.Dial(config.Web3Endpoint)
 	if err != nil {
 		return nil, err
