@@ -1,18 +1,11 @@
 package api_fondation
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"math/big"
-	"net/http"
-	"os"
 	"strconv"
 	"time"
-
-	web3 "github.com/ethereum/go-ethereum/ethclient"
-	rpc "github.com/tendermint/tendermint/rpc/client/http"
-	"github.com/valyala/fasthttp"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
@@ -269,55 +262,6 @@ func (w *Worker) panicError(err error) {
 		w.logger.Error(fmt.Sprintf("Error: %v", err))
 		panic(err)
 	}
-}
-
-func getHostName() (string, error) {
-	hostname, err := os.Hostname()
-	if err != nil {
-		return "", err
-	}
-
-	return hostname, nil
-}
-
-func GetHttpClient() *fasthttp.Client {
-	return &fasthttp.Client{}
-}
-
-func GetWeb3Client(config *Config) (*web3.Client, error) {
-	web3Client, err := web3.Dial(config.Web3Endpoint)
-	if err != nil {
-		return nil, err
-	}
-
-	return web3Client, nil
-}
-
-func getWeb3ChainId(web3Client *web3.Client) (*big.Int, error) {
-	web3ChainId, err := web3Client.ChainID(context.Background())
-	if err != nil {
-		return nil, err
-	}
-
-	return web3ChainId, nil
-}
-
-func GetRpcClient(config *Config, httpClient *http.Client) (*rpc.HTTP, error) {
-	rpcClient, err := rpc.NewWithClient(config.RpcEndpoint, config.RpcEndpoint, httpClient)
-	if err != nil {
-		return nil, err
-	}
-
-	return rpcClient, nil
-}
-
-func GetEthRpcClient(config *Config) (*ethrpc.Client, error) {
-	ethRpcClient, err := ethrpc.Dial(config.Web3Endpoint)
-	if err != nil {
-		return nil, err
-	}
-
-	return ethRpcClient, nil
 }
 
 func (w *Worker) fetchBlock(height int64) *ctypes.ResultBlock {
