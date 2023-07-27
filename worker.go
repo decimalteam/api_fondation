@@ -1,6 +1,7 @@
 package api_fondation
 
 import (
+	"api_fondation/events"
 	"encoding/json"
 	"fmt"
 	"math/big"
@@ -118,7 +119,7 @@ var eventProcessors = map[string]processFunc{
 }
 
 func (w *Worker) GetBlockResult(height int64) *Block {
-	accum := NewEventAccumulator()
+	accum := events.NewEventAccumulator()
 
 	w.logger.Info("Retrieving block results...", "block", height)
 
