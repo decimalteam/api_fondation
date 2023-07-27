@@ -1,15 +1,16 @@
-package api_fondation
+package events
 
 import (
+	"api_fondation"
 	sdkmath "cosmossdk.io/math"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-func NewEventAccumulator() *EventAccumulator {
-	return &EventAccumulator{
+func NewEventAccumulator() *main.EventAccumulator {
+	return &main.EventAccumulator{
 		BalancesChanges: make(map[string]map[string]sdkmath.Int),
-		CoinUpdates:     make(map[string]EventUpdateCoin),
-		CoinsVR:         make(map[string]UpdateCoinVR),
+		CoinUpdates:     make(map[string]main.EventUpdateCoin),
+		CoinsVR:         make(map[string]main.UpdateCoinVR),
 		CoinsStaked:     make(map[string]sdkmath.Int),
 		LegacyReown:     make(map[string]string),
 	}
@@ -17,7 +18,7 @@ func NewEventAccumulator() *EventAccumulator {
 
 // account balances
 // gathered from all transactions, amount can be negative
-func (ea *EventAccumulator) addBalanceChange(address string, symbol string, amount sdkmath.Int) {
+func (ea *main.EventAccumulator) addBalanceChange(address string, symbol string, amount sdkmath.Int) {
 	balance, ok := ea.BalancesChanges[address]
 	if !ok {
 		ea.BalancesChanges[address] = map[string]sdkmath.Int{symbol: amount}
@@ -32,26 +33,26 @@ func (ea *EventAccumulator) addBalanceChange(address string, symbol string, amou
 }
 
 // custom coin reserve or volume update
-func (ea *EventAccumulator) addCoinVRChange(symbol string, vr UpdateCoinVR) {
+func (ea *main.EventAccumulator) addCoinVRChange(symbol string, vr main.UpdateCoinVR) {
 	ea.CoinsVR[symbol] = vr
 }
 
-func (ea *EventAccumulator) addMintSubTokens(e EventMintToken) {
+func (ea *main.EventAccumulator) addMintSubTokens(e main.EventMintToken) {
 	ea.MintSubTokens = append(ea.MintSubTokens, e)
 }
 
-func (ea *EventAccumulator) addBurnSubTokens(e EventBurnToken) {
+func (ea *main.EventAccumulator) addBurnSubTokens(e main.EventBurnToken) {
 	ea.BurnSubTokens = append(ea.BurnSubTokens, e)
 }
 
-func (ea *EventAccumulator) addCoinsStaked(e EventUpdateCoinsStaked) {
+func (ea *main.EventAccumulator) addCoinsStaked(e main.EventUpdateCoinsStaked) {
 	ea.CoinsStaked[e.denom] = e.amount
 }
 
-func (ea *EventAccumulator) AddEvent(event abci.Event, txHash string) error {
-	procFunc, ok := eventProcessors[event.Type]
+func (ea *main.EventAccumulator) AddEvent(event abci.Event, txHash string) error {
+	procFunc, ok := main.eventProcessors[event.Type]
 	if !ok {
-		return processStub(ea, event, txHash)
+		return main.processStub(ea, event, txHash)
 	}
 	return procFunc(ea, event, txHash)
 }
