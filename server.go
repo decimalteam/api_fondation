@@ -1,4 +1,4 @@
-package api_fondation
+package main
 
 import (
 	"flag"
