@@ -203,7 +203,6 @@ type EventCreateCoin struct {
 	// ? burn
 }
 
-
 type EventPayCommission struct {
 	Payer  string    `json:"payer"`
 	Coins  sdk.Coins `json:"coins"`
