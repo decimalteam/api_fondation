@@ -1,7 +1,7 @@
 package events
 
 import (
-	"api_fondation/types"
+	"bitbucket.org/decimalteam/api_fondation/types"
 	sdkmath "cosmossdk.io/math"
 	"encoding/json"
 	"fmt"

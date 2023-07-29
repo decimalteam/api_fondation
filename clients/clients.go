@@ -1,7 +1,7 @@
 package clients
 
 import (
-	"api_fondation/worker"
+	"bitbucket.org/decimalteam/api_fondation/worker"
 	"context"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"

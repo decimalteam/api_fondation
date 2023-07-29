@@ -1,8 +1,8 @@
 package worker
 
 import (
-	"api_fondation/events"
-	"api_fondation/types"
+	"bitbucket.org/decimalteam/api_fondation/events"
+	"bitbucket.org/decimalteam/api_fondation/types"
 	"context"
 	"encoding/json"
 	"fmt"

@@ -50,3 +50,7 @@ type Attribute struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
 }
+
+type FailedTxLog struct {
+	Log string `json:"log"`
+}

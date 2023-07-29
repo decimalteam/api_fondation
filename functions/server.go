@@ -1,10 +1,14 @@
-package server
+package functions
 
 import (
 	"context"
 	"net/http"
 	"time"
 )
+
+type Server struct {
+	httpServer *http.Server
+}
 
 func (s *Server) Run(port string, handler http.Handler) error {
 	s.httpServer = &http.Server{

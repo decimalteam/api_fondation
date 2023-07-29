@@ -1,7 +1,7 @@
 package types
 
 import (
-	"api_fondation/events"
+	"bitbucket.org/decimalteam/api_fondation/events"
 	"context"
 	"github.com/cosmos/cosmos-sdk/simapp/params"
 	web3common "github.com/ethereum/go-ethereum/common"
@@ -87,8 +87,4 @@ type TransactionEVM struct {
 	AccessList web3types.AccessList `json:"accessList,omitempty"`           // EIP-2930 access list
 	GasTipCap  *web3hexutil.Big     `json:"maxPriorityFeePerGas,omitempty"` // EIP-1559 dynamic fee transactions
 	GasFeeCap  *web3hexutil.Big     `json:"maxFeePerGas,omitempty"`         // EIP-1559 dynamic fee transactions
-}
-
-type FailedTxLog struct {
-	Log string `json:"log"`
 }
