@@ -34,7 +34,7 @@ func GetWeb3Client(config *worker.Config) (*ethclient.Client, error) {
 	return web3Client, nil
 }
 
-func getWeb3ChainId(web3Client *ethclient.Client) (*big.Int, error) {
+func GetWeb3ChainId(web3Client *ethclient.Client) (*big.Int, error) {
 	web3ChainId, err := web3Client.ChainID(context.Background())
 	if err != nil {
 		return nil, err
