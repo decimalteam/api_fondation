@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"math/big"
 	"net/http"
-	"os"
 	"time"
 
 	"bitbucket.org/decimalteam/api_fondation/events"
@@ -68,8 +67,12 @@ func GetBlockResult(height int64) *types.Block {
 
 	fmt.Printf("Retrieving block results...", "block", height)
 
+	rpcClient, err := clients.GetRpcClient(getConfig(), clients.GetHttpClient())
+	if err != nil {
+		panicError(err)
+	}
 	// Fetch requested block from Tendermint RPC
-	block := fetchBlock(ctx, height)
+	block := fetchBlock(ctx, rpcClient, height)
 	if block == nil {
 		return nil
 	}
@@ -220,7 +223,7 @@ func panicError(err error) {
 	}
 }
 
-func fetchBlock(ctx context.Context, height int64) *ctypes.ResultBlock {
+func fetchBlock(ctx context.Context, rpcClient *rpc.HTTP, height int64) *ctypes.ResultBlock {
 	// Request until get block
 	for first, start, deadline := true, time.Now(), time.Now().Add(types.RequestTimeout); true; first = false {
 		// Request block
