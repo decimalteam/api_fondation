@@ -1,11 +1,13 @@
 package worker
 
 import (
+	"bitbucket.org/decimalteam/api_fondation/clients"
 	"context"
 	"encoding/json"
 	"fmt"
 	"math/big"
 	"net/http"
+	"os"
 	"time"
 
 	"bitbucket.org/decimalteam/api_fondation/events"
@@ -54,13 +56,6 @@ type Worker struct {
 	query        chan *ParseTask
 }
 
-type Config struct {
-	IndexerEndpoint string
-	RpcEndpoint     string
-	Web3Endpoint    string
-	WorkersCount    int
-}
-
 type ParseTask struct {
 	height int64
 	txNum  int
@@ -98,7 +93,17 @@ func GetBlockResult(height int64) *types.Block {
 	web3Body := web3Block.Body()
 	web3Transactions := make([]*types.TransactionEVM, len(web3Body.Transactions))
 	for i, tx := range web3Body.Transactions {
-		msg, err := tx.AsMessage(web3types.NewLondonSigner(getWeb3ChainId()), nil)
+		web3Client, err := clients.GetWeb3Client(getConfig())
+		if err != nil {
+			panicError(err)
+		}
+
+		web3ChainId, err := clients.GetWeb3ChainId(web3Client)
+		if err != nil {
+			panicError(err)
+		}
+
+		msg, err := tx.AsMessage(web3types.NewLondonSigner(web3ChainId), nil)
 		panicError(err)
 		web3Transactions[i] = &types.TransactionEVM{
 			Type:             web3hexutil.Uint64(tx.Type()),
