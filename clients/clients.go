@@ -6,7 +6,6 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
 	http2 "github.com/tendermint/tendermint/rpc/client/http"
-	"github.com/valyala/fasthttp"
 	"math/big"
 	"net/http"
 	"os"
@@ -21,8 +20,8 @@ func getHostName() (string, error) {
 	return hostname, nil
 }
 
-func GetHttpClient() *fasthttp.Client {
-	return &fasthttp.Client{}
+func GetHttpClient() *http.Client {
+	return &http.Client{}
 }
 
 func GetWeb3Client(config *worker.Config) (*ethclient.Client, error) {

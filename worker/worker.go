@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/evmos/ethermint/encoding"
 	"math/big"
 	"net/http"
 	"time"
@@ -67,6 +68,8 @@ func GetBlockResult(height int64) *types.Block {
 
 	fmt.Printf("Retrieving block results...", "block", height)
 
+	cdc := encoding.MakeConfig(getModuleBasics())
+
 	rpcClient, err := clients.GetRpcClient(getConfig(), clients.GetHttpClient())
 	if err != nil {
 		panicError(err)
@@ -95,7 +98,7 @@ func GetBlockResult(height int64) *types.Block {
 	sizeChan := make(chan int)
 	web3BlockChan := make(chan *web3types.Block)
 	web3ReceiptsChan := make(chan web3types.Receipts)
-	go fetchBlockResults(ctx, rpcClient, height, *block, accum, txsChan, resultsChan)
+	go fetchBlockResults(ctx, rpcClient, cdc, height, *block, accum, txsChan, resultsChan)
 	go fetchBlockSize(ctx, rpcClient, height, sizeChan)
 	txs := <-txsChan
 	results := <-resultsChan
@@ -275,7 +278,7 @@ func fetchBlockSize(ctx context.Context, rpcClient *rpc.HTTP, height int64, ch c
 	ch <- result.BlockMetas[0].BlockSize
 }
 
-func fetchBlockResults(ctx context.Context, rpcClient *rpc.HTTP, height int64, block ctypes.ResultBlock, ea *events.EventAccumulator, ch chan []types.Tx, brch chan *ctypes.ResultBlockResults) {
+func fetchBlockResults(ctx context.Context, rpcClient *rpc.HTTP, cdc params.EncodingConfig, height int64, block ctypes.ResultBlock, ea *events.EventAccumulator, ch chan []types.Tx, brch chan *ctypes.ResultBlockResults) {
 	var err error
 
 	// Request block results from the node
@@ -312,7 +315,7 @@ func fetchBlockResults(ctx context.Context, rpcClient *rpc.HTTP, height int64, b
 			result.Log = txLog
 		}
 
-		result.Info = parseTxInfo(recoveredTx)
+		result.Info = parseTxInfo(recoveredTx, cdc)
 		result.Data = txr.Data
 		result.Hash = hexutils.BytesToHex(tx.Hash())
 		result.Code = txr.Code
@@ -431,7 +434,7 @@ func DurationToString(d time.Duration) string {
 	return fmt.Sprintf("%s %s", amount, unit)
 }
 
-func parseTxInfo(tx sdk.Tx) (txInfo types.TxInfo) {
+func parseTxInfo(tx sdk.Tx, cdc params.EncodingConfig) (txInfo types.TxInfo) {
 	if tx == nil {
 		return
 	}
