@@ -1,18 +1,19 @@
 package worker
 
 import (
-	"bitbucket.org/decimalteam/api_fondation/events"
-	"bitbucket.org/decimalteam/api_fondation/types"
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/big"
+	"net/http"
+	"time"
+
+	"bitbucket.org/decimalteam/api_fondation/events"
+	"bitbucket.org/decimalteam/api_fondation/types"
 	"github.com/cosmos/cosmos-sdk/simapp/params"
 	web3 "github.com/ethereum/go-ethereum/ethclient"
 	"github.com/tendermint/tendermint/libs/log"
 	rpc "github.com/tendermint/tendermint/rpc/client/http"
-	"math/big"
-	"net/http"
-	"time"
 
 	//evmtypes "github.com/evmos/ethermint/x/evm/types"
 
@@ -65,13 +66,15 @@ type ParseTask struct {
 	txNum  int
 }
 
-func (w *Worker) GetBlockResult(height int64) *types.Block {
+func GetBlockResult(height int64) *types.Block {
+	ctx := context.Background()
+
 	accum := events.NewEventAccumulator()
 
-	w.logger.Info("Retrieving block results...", "block", height)
+	fmt.Printf("Retrieving block results...", "block", height)
 
 	// Fetch requested block from Tendermint RPC
-	block := w.fetchBlock(height)
+	block := fetchBlock(ctx, height)
 	if block == nil {
 		return nil
 	}
@@ -83,20 +86,20 @@ func (w *Worker) GetBlockResult(height int64) *types.Block {
 	sizeChan := make(chan int)
 	web3BlockChan := make(chan *web3types.Block)
 	web3ReceiptsChan := make(chan web3types.Receipts)
-	go w.fetchBlockResults(height, *block, accum, txsChan, resultsChan)
-	go w.fetchBlockSize(height, sizeChan)
+	go fetchBlockResults(ctx, height, *block, accum, txsChan, resultsChan)
+	go fetchBlockSize(ctx, height, sizeChan)
 	txs := <-txsChan
 	results := <-resultsChan
 	size := <-sizeChan
-	go w.fetchBlockWeb3(height, web3BlockChan)
+	go fetchBlockWeb3(ctx, height, web3BlockChan)
 
 	web3Block := <-web3BlockChan
-	go w.fetchBlockTxReceiptsWeb3(web3Block, web3ReceiptsChan)
+	go fetchBlockTxReceiptsWeb3(web3Block, web3ReceiptsChan)
 	web3Body := web3Block.Body()
 	web3Transactions := make([]*types.TransactionEVM, len(web3Body.Transactions))
 	for i, tx := range web3Body.Transactions {
-		msg, err := tx.AsMessage(web3types.NewLondonSigner(w.web3ChainId), nil)
-		w.panicError(err)
+		msg, err := tx.AsMessage(web3types.NewLondonSigner(getWeb3ChainId()), nil)
+		panicError(err)
 		web3Transactions[i] = &types.TransactionEVM{
 			Type:             web3hexutil.Uint64(tx.Type()),
 			Hash:             tx.Hash(),
@@ -121,13 +124,13 @@ func (w *Worker) GetBlockResult(height int64) *types.Block {
 	for _, event := range results.BeginBlockEvents {
 		err := accum.AddEvent(event, "")
 		if err != nil {
-			w.panicError(err)
+			panicError(err)
 		}
 	}
 	for _, event := range results.EndBlockEvents {
 		err := accum.AddEvent(event, "")
 		if err != nil {
-			w.panicError(err)
+			panicError(err)
 		}
 	}
 
@@ -174,7 +177,7 @@ func (w *Worker) GetBlockResult(height int64) *types.Block {
 		}
 	}
 
-	w.logger.Info(
+	fmt.Println(
 		fmt.Sprintf("Compiled block (%s)", DurationToString(time.Since(start))),
 		"block", height,
 		"txs", len(txs),
@@ -192,8 +195,8 @@ func (w *Worker) GetBlockResult(height int64) *types.Block {
 		Emission:          emission,
 		Rewards:           rewards,
 		CommissionRewards: commissionRewards,
-		EndBlockEvents:    w.parseEvents(results.EndBlockEvents),
-		BeginBlockEvents:  w.parseEvents(results.BeginBlockEvents),
+		EndBlockEvents:    parseEvents(results.EndBlockEvents),
+		BeginBlockEvents:  parseEvents(results.BeginBlockEvents),
 		Size:              size,
 		StateChanges:      *accum,
 		EVM: types.BlockEVM{
@@ -205,26 +208,26 @@ func (w *Worker) GetBlockResult(height int64) *types.Block {
 	}
 }
 
-func (w *Worker) panicError(err error) {
+func panicError(err error) {
 	if err != nil {
-		w.logger.Error(fmt.Sprintf("Error: %v", err))
+		fmt.Println(fmt.Sprintf("Error: %v", err))
 		panic(err)
 	}
 }
 
-func (w *Worker) fetchBlock(height int64) *ctypes.ResultBlock {
+func fetchBlock(ctx context.Context, height int64) *ctypes.ResultBlock {
 	// Request until get block
 	for first, start, deadline := true, time.Now(), time.Now().Add(types.RequestTimeout); true; first = false {
 		// Request block
-		result, err := w.rpcClient.Block(w.ctx, &height)
+		result, err := rpcClient.Block(ctx, &height)
 		if err == nil {
 			if !first {
-				w.logger.Info(
+				fmt.Println(
 					fmt.Sprintf("Fetched block (after %s)", DurationToString(time.Since(start))),
 					"block", height,
 				)
 			} else {
-				w.logger.Info(
+				fmt.Println(
 					fmt.Sprintf("Fetched block (%s)", DurationToString(time.Since(start))),
 					"block", height,
 				)
@@ -233,7 +236,7 @@ func (w *Worker) fetchBlock(height int64) *ctypes.ResultBlock {
 		}
 		// Stop trying when the deadline is reached
 		if time.Now().After(deadline) {
-			w.logger.Error("Failed to fetch block", "block", height, "error", err)
+			fmt.Printf("Failed to fetch block", "block", height, "error\n", err)
 			return nil
 		}
 		// Sleep some time before next try
@@ -243,17 +246,17 @@ func (w *Worker) fetchBlock(height int64) *ctypes.ResultBlock {
 	return nil
 }
 
-func (w *Worker) fetchBlockSize(height int64, ch chan int) {
+func fetchBlockSize(ctx context.Context, height int64, ch chan int) {
 
 	// Request blockchain info
-	result, err := w.rpcClient.BlockchainInfo(w.ctx, height, height)
-	w.panicError(err)
+	result, err := rpcClient.BlockchainInfo(ctx, height, height)
+	panicError(err)
 
 	// Send result to the channel
 	ch <- result.BlockMetas[0].BlockSize
 }
 
-func (w *Worker) fetchBlockResults(height int64, block ctypes.ResultBlock, ea *events.EventAccumulator, ch chan []types.Tx, brch chan *ctypes.ResultBlockResults) {
+func fetchBlockResults(ctx context.Context, height int64, block ctypes.ResultBlock, ea *events.EventAccumulator, ch chan []types.Tx, brch chan *ctypes.ResultBlockResults) {
 	var err error
 
 	// Request block results from the node
@@ -261,10 +264,10 @@ func (w *Worker) fetchBlockResults(height int64, block ctypes.ResultBlock, ea *e
 	var blockResults *ctypes.ResultBlockResults
 	for c := 1; true; c++ {
 		if c > 5 {
-			w.logger.Debug(fmt.Sprintf("%d attempt to fetch block height: %d, time %s", c, height, time.Now().String()))
+			fmt.Println(fmt.Sprintf("%d attempt to fetch block height: %d, time %s", c, height, time.Now().String()))
 		}
 		// Request block results
-		blockResults, err = w.rpcClient.BlockResults(w.ctx, &height)
+		blockResults, err = rpcClient.BlockResults(ctx, &height)
 		if err == nil {
 			break
 		}
@@ -279,8 +282,8 @@ func (w *Worker) fetchBlockResults(height int64, block ctypes.ResultBlock, ea *e
 		var txLog []interface{}
 		txr := blockResults.TxsResults[i]
 
-		recoveredTx, err := w.cdc.TxConfig.TxDecoder()(tx)
-		w.panicError(err)
+		recoveredTx, err := cdc.TxConfig.TxDecoder()(tx)
+		panicError(err)
 
 		// Parse transaction results logs
 		err = json.Unmarshal([]byte(txr.Log), &txLog)
@@ -290,7 +293,7 @@ func (w *Worker) fetchBlockResults(height int64, block ctypes.ResultBlock, ea *e
 			result.Log = txLog
 		}
 
-		result.Info = w.parseTxInfo(recoveredTx)
+		result.Info = parseTxInfo(recoveredTx)
 		result.Data = txr.Data
 		result.Hash = hexutils.BytesToHex(tx.Hash())
 		result.Code = txr.Code
@@ -305,7 +308,7 @@ func (w *Worker) fetchBlockResults(height int64, block ctypes.ResultBlock, ea *e
 			err := ea.AddEvent(event, hexutils.BytesToHex(tx.Hash()))
 			if err != nil {
 				fmt.Printf("error in event %v\n", event.Type)
-				w.panicError(err)
+				panicError(err)
 			}
 		}
 	}
@@ -315,17 +318,17 @@ func (w *Worker) fetchBlockResults(height int64, block ctypes.ResultBlock, ea *e
 	brch <- blockResults
 }
 
-func (w *Worker) fetchBlockWeb3(height int64, ch chan *web3types.Block) {
+func fetchBlockWeb3(ctx context.Context, height int64, ch chan *web3types.Block) {
 
 	// Request block by number
-	result, err := w.web3Client.BlockByNumber(w.ctx, big.NewInt(height))
-	w.panicError(err)
+	result, err := web3Client.BlockByNumber(ctx, big.NewInt(height))
+	panicError(err)
 
 	// Send result to the channel
 	ch <- result
 }
 
-func (w *Worker) fetchBlockTxReceiptsWeb3(block *web3types.Block, ch chan web3types.Receipts) {
+func fetchBlockTxReceiptsWeb3(block *web3types.Block, ch chan web3types.Receipts) {
 	txCount := len(block.Transactions())
 	results := make(web3types.Receipts, txCount)
 	requests := make([]ethrpc.BatchElem, txCount)
@@ -337,7 +340,7 @@ func (w *Worker) fetchBlockTxReceiptsWeb3(block *web3types.Block, ch chan web3ty
 	// NOTE: Try to retrieve tx receipts in the loop since it looks like there is some delay before receipts are ready to by retrieved
 	for c := 1; true; c++ {
 		if c > 5 {
-			w.logger.Debug(fmt.Sprintf("%d attempt to fetch transaction receipts with height: %d, time %s", c, block.NumberU64(), time.Now().String()))
+			fmt.Println(fmt.Sprintf("%d attempt to fetch transaction receipts with height: %d, time %s", c, block.NumberU64(), time.Now().String()))
 		}
 		// Prepare batch requests to retrieve the receipt for each transaction in the block
 		for i, tx := range block.Transactions() {
@@ -349,7 +352,7 @@ func (w *Worker) fetchBlockTxReceiptsWeb3(block *web3types.Block, ch chan web3ty
 			}
 		}
 		// Request transaction receipts with a batch
-		err := w.ethRpcClient.BatchCall(requests[:])
+		err := ethRpcClient.BatchCall(requests[:])
 		if err == nil {
 			// Ensure all transaction receipts are retrieved
 			for i := range requests {
@@ -357,14 +360,14 @@ func (w *Worker) fetchBlockTxReceiptsWeb3(block *web3types.Block, ch chan web3ty
 				if requests[i].Error != nil {
 					err = requests[i].Error
 					if c > 5 {
-						w.logger.Error(fmt.Sprintf("Error: %v", err))
+						fmt.Println(fmt.Sprintf("Error: %v", err))
 					}
 					continue
 				}
 				if results[i].BlockNumber == nil || results[i].BlockNumber.Sign() == 0 {
 					err = fmt.Errorf("got null result for tx with hash %v", txHash)
 					if c > 5 {
-						w.logger.Error(fmt.Sprintf("Error: %v", err))
+						fmt.Println(fmt.Sprintf("Error: %v", err))
 					}
 				}
 			}
@@ -409,14 +412,14 @@ func DurationToString(d time.Duration) string {
 	return fmt.Sprintf("%s %s", amount, unit)
 }
 
-func (w *Worker) parseTxInfo(tx sdk.Tx) (txInfo types.TxInfo) {
+func parseTxInfo(tx sdk.Tx) (txInfo types.TxInfo) {
 	if tx == nil {
 		return
 	}
 	for _, rawMsg := range tx.GetMsgs() {
 		params := make(map[string]interface{})
-		err := json.Unmarshal(w.cdc.Codec.MustMarshalJSON(rawMsg), &params)
-		w.panicError(err)
+		err := json.Unmarshal(cdc.Codec.MustMarshalJSON(rawMsg), &params)
+		panicError(err)
 		var msg types.TxMsg
 		msg.Type = sdk.MsgTypeURL(rawMsg)
 		msg.Params = params
@@ -431,7 +434,7 @@ func (w *Worker) parseTxInfo(tx sdk.Tx) (txInfo types.TxInfo) {
 	return
 }
 
-func (w *Worker) parseEvents(events []abci.Event) []types.Event {
+func parseEvents(events []abci.Event) []types.Event {
 	var newEvents []types.Event
 	for _, ev := range events {
 		newEvent := types.Event{
