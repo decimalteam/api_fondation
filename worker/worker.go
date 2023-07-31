@@ -84,8 +84,8 @@ func GetBlockResult(height int64) *types.Block {
 	sizeChan := make(chan int)
 	web3BlockChan := make(chan *web3types.Block)
 	web3ReceiptsChan := make(chan web3types.Receipts)
-	go fetchBlockResults(ctx, height, *block, accum, txsChan, resultsChan)
-	go fetchBlockSize(ctx, height, sizeChan)
+	go fetchBlockResults(ctx, rpcClient, height, *block, accum, txsChan, resultsChan)
+	go fetchBlockSize(ctx, rpcClient, height, sizeChan)
 	txs := <-txsChan
 	results := <-resultsChan
 	size := <-sizeChan
@@ -254,7 +254,7 @@ func fetchBlock(ctx context.Context, rpcClient *rpc.HTTP, height int64) *ctypes.
 	return nil
 }
 
-func fetchBlockSize(ctx context.Context, height int64, ch chan int) {
+func fetchBlockSize(ctx context.Context, rpcClient *rpc.HTTP, height int64, ch chan int) {
 
 	// Request blockchain info
 	result, err := rpcClient.BlockchainInfo(ctx, height, height)
@@ -264,7 +264,7 @@ func fetchBlockSize(ctx context.Context, height int64, ch chan int) {
 	ch <- result.BlockMetas[0].BlockSize
 }
 
-func fetchBlockResults(ctx context.Context, height int64, block ctypes.ResultBlock, ea *events.EventAccumulator, ch chan []types.Tx, brch chan *ctypes.ResultBlockResults) {
+func fetchBlockResults(ctx context.Context, rpcClient *rpc.HTTP, height int64, block ctypes.ResultBlock, ea *events.EventAccumulator, ch chan []types.Tx, brch chan *ctypes.ResultBlockResults) {
 	var err error
 
 	// Request block results from the node
