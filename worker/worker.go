@@ -71,6 +71,17 @@ func GetBlockResult(height int64) *types.Block {
 	if err != nil {
 		panicError(err)
 	}
+
+	web3Client, err := clients.GetWeb3Client(getConfig())
+	if err != nil {
+		panicError(err)
+	}
+
+	ethRpcClient, err := clients.GetEthRpcClient(getConfig())
+	if err != nil {
+		panicError(err)
+	}
+
 	// Fetch requested block from Tendermint RPC
 	block := fetchBlock(ctx, rpcClient, height)
 	if block == nil {
@@ -89,10 +100,10 @@ func GetBlockResult(height int64) *types.Block {
 	txs := <-txsChan
 	results := <-resultsChan
 	size := <-sizeChan
-	go fetchBlockWeb3(ctx, height, web3BlockChan)
+	go fetchBlockWeb3(ctx, web3Client, height, web3BlockChan)
 
 	web3Block := <-web3BlockChan
-	go fetchBlockTxReceiptsWeb3(web3Block, web3ReceiptsChan)
+	go fetchBlockTxReceiptsWeb3(ethRpcClient, web3Block, web3ReceiptsChan)
 	web3Body := web3Block.Body()
 	web3Transactions := make([]*types.TransactionEVM, len(web3Body.Transactions))
 	for i, tx := range web3Body.Transactions {
@@ -326,7 +337,7 @@ func fetchBlockResults(ctx context.Context, rpcClient *rpc.HTTP, height int64, b
 	brch <- blockResults
 }
 
-func fetchBlockWeb3(ctx context.Context, height int64, ch chan *web3types.Block) {
+func fetchBlockWeb3(ctx context.Context, web3Client *web3.Client, height int64, ch chan *web3types.Block) {
 
 	// Request block by number
 	result, err := web3Client.BlockByNumber(ctx, big.NewInt(height))
@@ -336,7 +347,7 @@ func fetchBlockWeb3(ctx context.Context, height int64, ch chan *web3types.Block)
 	ch <- result
 }
 
-func fetchBlockTxReceiptsWeb3(block *web3types.Block, ch chan web3types.Receipts) {
+func fetchBlockTxReceiptsWeb3(ethRpcClient *ethrpc.Client, block *web3types.Block, ch chan web3types.Receipts) {
 	txCount := len(block.Transactions())
 	results := make(web3types.Receipts, txCount)
 	requests := make([]ethrpc.BatchElem, txCount)
