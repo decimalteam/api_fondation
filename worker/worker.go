@@ -91,7 +91,7 @@ func GetBlockResult(height int64) *types.Block {
 		return nil
 	}
 
-	// Fetch everything needed from Tendermint RPC aand EVM
+	// Fetch everything needed from Tendermint RPC and EVM
 	start := time.Now()
 	txsChan := make(chan []types.Tx)
 	resultsChan := make(chan *ctypes.ResultBlockResults)
