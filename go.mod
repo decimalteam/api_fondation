@@ -11,6 +11,7 @@ require (
 	github.com/ethereum/go-ethereum v1.10.26
 	github.com/evmos/ethermint v0.20.0-rc4
 	github.com/gemnasium/logrus-graylog-hook v2.0.7+incompatible
+	github.com/nats-io/nats.go v1.28.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/status-im/keycard-go v0.0.0-20200402102358-957c09536969
 	github.com/tendermint/tendermint v0.34.23
@@ -111,7 +112,6 @@ require (
 	github.com/mitchellh/go-testing-interface v1.0.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
-	github.com/nats-io/nats.go v1.28.0 // indirect
 	github.com/nats-io/nkeys v0.4.4 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
