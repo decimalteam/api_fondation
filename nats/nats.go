@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"runtime"
 
@@ -17,29 +18,40 @@ func main() {
 	runtime.Goexit()
 }
 
+type ServiceRequest struct {
+	Text string `json:"text"`
+}
+
+type ServiceResponse struct {
+	Text string `json:"text"`
+}
+
 func Connect() error {
 	nc, err := nats.Connect(nats.DefaultURL)
 	if err != nil {
 		return err
 	}
 
-	_, err = micro.AddService(nc, micro.Config{
+	micro.AddService(nc, micro.Config{
 		Name:        "service1",
 		Description: "service1",
 		Version:     "0.0.1",
 		Endpoint: &micro.EndpointConfig{
 			Subject: "service1",
 			Handler: micro.HandlerFunc(func(req micro.Request) {
-				//var r ServiceRequest
-				//json.Unmarshal(r.Data(), &r)
-
+				var r ServiceRequest
+				err := json.Unmarshal(req.Data(), &r)
+				if err != nil {
+					req.Error("400", err.Error(), nil)
+					return
+				}
+				req.RespondJSON(&ServiceResponse{""})
 			}),
 			Metadata: nil,
 		},
 	})
-	if err != nil {
-		return err
-	}
+
+	log.Println("Listening in 'service1'", nc.ConnectedAddr())
 
 	return nil
 }
