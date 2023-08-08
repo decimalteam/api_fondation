@@ -45,13 +45,13 @@ func Connect() error {
 					req.Error("400", err.Error(), nil)
 					return
 				}
-				req.RespondJSON(&ServiceResponse{""})
+				req.RespondJSON(&ServiceResponse{"response"})
 			}),
 			Metadata: nil,
 		},
 	})
 
-	log.Println("Listening in 'service1'", nc.ConnectedAddr())
+	log.Println("Listening on 'service1'", nc.ConnectedAddr())
 
 	return nil
 }
