@@ -42,10 +42,15 @@ func Connect(svcName, svcDescription, svcVersion, svcSubject string) error {
 				var r ServiceRequest
 				err = json.Unmarshal(req.Data(), &r)
 				if err != nil {
-					req.Error("400", err.Error(), nil)
+					err = req.Error("400", err.Error(), nil)
+					if err != nil {
+						return
+					}
+				}
+				err = req.RespondJSON(&ServiceResponse{"response"})
+				if err != nil {
 					return
 				}
-				req.RespondJSON(&ServiceResponse{"response"})
 			}),
 			Metadata: nil,
 		},
