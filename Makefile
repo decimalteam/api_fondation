@@ -1,4 +1,4 @@
 set-tag:
-	git tag "v1.0.2"
+	git tag "v1.0.3"
 push-tag:
 	git push --tags
