@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	err := Connect()
+	err := Connect("service1", "service1 description", "0.0.1", "service1subject")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -26,21 +26,21 @@ type ServiceResponse struct {
 	Text string `json:"text"`
 }
 
-func Connect() error {
+func Connect(svcName, svcDescription, svcVersion, svcSubject string) error {
 	nc, err := nats.Connect(nats.DefaultURL)
 	if err != nil {
 		return err
 	}
 
-	micro.AddService(nc, micro.Config{
-		Name:        "service1",
-		Description: "service1",
-		Version:     "0.0.1",
+	_, err = micro.AddService(nc, micro.Config{
+		Name:        svcName,
+		Description: svcDescription,
+		Version:     svcVersion,
 		Endpoint: &micro.EndpointConfig{
-			Subject: "service1",
+			Subject: svcSubject,
 			Handler: micro.HandlerFunc(func(req micro.Request) {
 				var r ServiceRequest
-				err := json.Unmarshal(req.Data(), &r)
+				err = json.Unmarshal(req.Data(), &r)
 				if err != nil {
 					req.Error("400", err.Error(), nil)
 					return
@@ -50,6 +50,9 @@ func Connect() error {
 			Metadata: nil,
 		},
 	})
+	if err != nil {
+		return err
+	}
 
 	log.Println("Listening on 'service1'", nc.ConnectedAddr())
 
