@@ -15,10 +15,10 @@ type ServiceResponse struct {
 	Text string `json:"text"`
 }
 
-func Connect(natsUrl, svcName, svcDescription, svcVersion, svcSubject string) error {
+func Connect(natsUrl, svcName, svcDescription, svcVersion, svcSubject string) (*nats.Conn, error) {
 	nc, err := nats.Connect(natsUrl)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	_, err = micro.AddService(nc, micro.Config{
@@ -45,10 +45,10 @@ func Connect(natsUrl, svcName, svcDescription, svcVersion, svcSubject string) er
 		},
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	log.Println("Listening on 'service1'", nc.ConnectedAddr())
 
-	return nil
+	return nc, nil
 }
