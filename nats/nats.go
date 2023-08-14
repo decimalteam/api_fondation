@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	err := Connect("service1", "service1 description", "0.0.1", "service1subject")
+	err := Connect(nats.DefaultURL, "service1", "service1 description", "0.0.1", "service1subject")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -26,8 +26,8 @@ type ServiceResponse struct {
 	Text string `json:"text"`
 }
 
-func Connect(svcName, svcDescription, svcVersion, svcSubject string) error {
-	nc, err := nats.Connect(nats.DefaultURL)
+func Connect(natsUrl, svcName, svcDescription, svcVersion, svcSubject string) error {
+	nc, err := nats.Connect(natsUrl)
 	if err != nil {
 		return err
 	}
