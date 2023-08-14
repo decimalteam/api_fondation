@@ -14,6 +14,7 @@ require (
 	github.com/nats-io/nats.go v1.28.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/status-im/keycard-go v0.0.0-20200402102358-957c09536969
+	github.com/t-tomalak/logrus-easy-formatter v0.0.0-20190827215021-c074f06c5816
 	github.com/tendermint/tendermint v0.34.23
 	github.com/valyala/fasthttp v1.48.0
 )
