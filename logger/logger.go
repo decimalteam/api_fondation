@@ -5,7 +5,7 @@ import (
 	easy "github.com/t-tomalak/logrus-easy-formatter"
 )
 
-func Logger(logLevel uint32, logFormat, timestampFormat string) *logrus.Logger {
+func GetLogger(logLevel uint32, logFormat, timestampFormat string) *logrus.Logger {
 	return &logrus.Logger{
 		Level: logrus.Level(logLevel),
 		Formatter: &easy.Formatter{
