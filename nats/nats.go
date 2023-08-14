@@ -1,22 +1,11 @@
-package main
+package nats
 
 import (
 	"encoding/json"
-	"log"
-	"runtime"
-
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/micro"
+	"log"
 )
-
-func main() {
-	err := Connect(nats.DefaultURL, "service1", "service1 description", "0.0.1", "service1subject")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	runtime.Goexit()
-}
 
 type ServiceRequest struct {
 	Text string `json:"text"`
