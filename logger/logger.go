@@ -1,16 +1,18 @@
 package logger
 
 import (
+	nested "github.com/antonfisher/nested-logrus-formatter"
 	"github.com/sirupsen/logrus"
-	easy "github.com/t-tomalak/logrus-easy-formatter"
 )
 
-func GetLogger(logLevel uint32, logFormat, timestampFormat string) *logrus.Logger {
+func GetLogger(logLevel uint32, fieldsOrder []string, timestampFormat string, hideKeys, noColors bool) *logrus.Logger {
 	return &logrus.Logger{
 		Level: logrus.Level(logLevel),
-		Formatter: &easy.Formatter{
+		Formatter: &nested.Formatter{
+			FieldsOrder:     fieldsOrder,
 			TimestampFormat: timestampFormat,
-			LogFormat:       logFormat,
+			HideKeys:        hideKeys,
+			NoColors:        noColors,
 		},
 	}
 }
