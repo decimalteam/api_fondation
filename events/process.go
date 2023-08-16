@@ -1,10 +1,11 @@
 package events
 
 import (
-	"bitbucket.org/decimalteam/api_fondation/types"
-	sdkmath "cosmossdk.io/math"
 	"encoding/json"
 	"fmt"
+	"strconv"
+
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -13,22 +14,34 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"strconv"
+)
+
+const (
+	Bech32Prefix        = "d0"
+	Bech32PrefixAccAddr = Bech32Prefix
+
+	EvmtypesModuleName        = "evm"
+	CointypesModuleName       = "coin"
+	NfttypesReservedPool      = "reserved_pool"
+	LegacytypesLegacyCoinPool = "legacy_coin_pool"
+	SwaptypesSwapPool         = "atomic_swap_pool"
+	ValidatortypesModuleName  = "validator"
+	FeetypesBurningPool       = "burning_pool"
 )
 
 var pool = map[string]bool{
-	mustConvertAndEncode(authtypes.NewModuleAddress(authtypes.FeeCollectorName)):      false,
-	mustConvertAndEncode(authtypes.NewModuleAddress(distrtypes.ModuleName)):           false,
-	mustConvertAndEncode(authtypes.NewModuleAddress(stakingtypes.BondedPoolName)):     false,
-	mustConvertAndEncode(authtypes.NewModuleAddress(stakingtypes.NotBondedPoolName)):  false,
-	mustConvertAndEncode(authtypes.NewModuleAddress(govtypes.ModuleName)):             false,
-	mustConvertAndEncode(authtypes.NewModuleAddress(types.EvmtypesModuleName)):        false,
-	mustConvertAndEncode(authtypes.NewModuleAddress(types.CointypesModuleName)):       false,
-	mustConvertAndEncode(authtypes.NewModuleAddress(types.NfttypesReservedPool)):      false,
-	mustConvertAndEncode(authtypes.NewModuleAddress(types.LegacytypesLegacyCoinPool)): false,
-	mustConvertAndEncode(authtypes.NewModuleAddress(types.SwaptypesSwapPool)):         false,
-	mustConvertAndEncode(authtypes.NewModuleAddress(types.ValidatortypesModuleName)):  false,
-	mustConvertAndEncode(authtypes.NewModuleAddress(types.FeetypesBurningPool)):       false,
+	mustConvertAndEncode(authtypes.NewModuleAddress(authtypes.FeeCollectorName)):     false,
+	mustConvertAndEncode(authtypes.NewModuleAddress(distrtypes.ModuleName)):          false,
+	mustConvertAndEncode(authtypes.NewModuleAddress(stakingtypes.BondedPoolName)):    false,
+	mustConvertAndEncode(authtypes.NewModuleAddress(stakingtypes.NotBondedPoolName)): false,
+	mustConvertAndEncode(authtypes.NewModuleAddress(govtypes.ModuleName)):            false,
+	mustConvertAndEncode(authtypes.NewModuleAddress(EvmtypesModuleName)):             false,
+	mustConvertAndEncode(authtypes.NewModuleAddress(CointypesModuleName)):            false,
+	mustConvertAndEncode(authtypes.NewModuleAddress(NfttypesReservedPool)):           false,
+	mustConvertAndEncode(authtypes.NewModuleAddress(LegacytypesLegacyCoinPool)):      false,
+	mustConvertAndEncode(authtypes.NewModuleAddress(SwaptypesSwapPool)):              false,
+	mustConvertAndEncode(authtypes.NewModuleAddress(ValidatortypesModuleName)):       false,
+	mustConvertAndEncode(authtypes.NewModuleAddress(FeetypesBurningPool)):            false,
 }
 
 type processFunc func(ea *EventAccumulator, event abci.Event, txHash string) error
@@ -367,7 +380,7 @@ func processEventRedeemCheck(ea *EventAccumulator, event abci.Event, txHash stri
 }
 
 func mustConvertAndEncode(address sdk.AccAddress) string {
-	res, err := bech32.ConvertAndEncode(types.Bech32PrefixAccAddr, address)
+	res, err := bech32.ConvertAndEncode(Bech32PrefixAccAddr, address)
 	if err != nil {
 		panic(err)
 	}
