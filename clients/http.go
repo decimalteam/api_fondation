@@ -37,12 +37,12 @@ func getRequest() {
 
 	// Do we need to decompress the response?
 	contentEncoding := resp.Header.Peek("Content-Encoding")
-	var body []byte
+	var _ []byte
 	if bytes.EqualFold(contentEncoding, []byte("gzip")) {
 		fmt.Println("Unzipping...")
-		body, _ = resp.BodyGunzip()
+		_, _ = resp.BodyGunzip()
 	} else {
-		body = resp.Body()
+		_ = resp.Body()
 	}
 
 }
