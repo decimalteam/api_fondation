@@ -10,8 +10,9 @@ func GetLogger() *logrus.Logger {
 
 	log := logrus.New()
 	log.SetFormatter(&Formatter{
-		HideKeys:    false,
-		CallerFirst: true,
+		HideKeys:       false,
+		CallerFirst:    true,
+		NoFieldsColors: true,
 	})
 
 	return log

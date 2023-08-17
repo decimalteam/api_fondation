@@ -92,6 +92,17 @@ func (f *Formatter) Format(entry *logrus.Entry) ([]byte, error) {
 		b.WriteString("\x1b[0m")
 	}
 
+	// write message
+	if f.TrimMessages {
+		b.WriteString(strings.TrimSpace(entry.Message))
+	} else {
+		b.WriteString(entry.Message)
+	}
+
+	if !f.CallerFirst {
+		f.writeCaller(b, entry)
+	}
+
 	// write fields
 	if f.FieldsOrder == nil {
 		f.writeFields(b, entry)
@@ -105,17 +116,6 @@ func (f *Formatter) Format(entry *logrus.Entry) ([]byte, error) {
 
 	if !f.NoColors && !f.NoFieldsColors {
 		b.WriteString("\x1b[0m")
-	}
-
-	// write message
-	if f.TrimMessages {
-		b.WriteString(strings.TrimSpace(entry.Message))
-	} else {
-		b.WriteString(entry.Message)
-	}
-
-	if !f.CallerFirst {
-		f.writeCaller(b, entry)
 	}
 
 	b.WriteByte('\n')
