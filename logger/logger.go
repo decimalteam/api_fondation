@@ -11,8 +11,8 @@ func GetLogger() *logrus.Logger {
 
 	log := logrus.New()
 	log.SetFormatter(&nested.Formatter{
-		HideKeys:    true,
-		FieldsOrder: []string{"component", "category"},
+		HideKeys:    false,
+		CallerFirst: true,
 	})
 
 	return log
