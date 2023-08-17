@@ -4,7 +4,6 @@ import (
 	nested "github.com/antonfisher/nested-logrus-formatter"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
-	log "github.com/sirupsen/logrus"
 	"time"
 )
 
@@ -45,7 +44,9 @@ func LogGinMiddleware() gin.HandlerFunc {
 		// Request IP
 		clientIP := ctx.ClientIP()
 
-		log.WithFields(log.Fields{
+		log := GetLogger()
+
+		log.WithFields(logrus.Fields{
 			"METHOD":    reqMethod,
 			"URI":       reqUri,
 			"STATUS":    statusCode,
