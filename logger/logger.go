@@ -1,7 +1,6 @@
 package logger
 
 import (
-	nested "github.com/antonfisher/nested-logrus-formatter"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"time"
@@ -10,7 +9,7 @@ import (
 func GetLogger() *logrus.Logger {
 
 	log := logrus.New()
-	log.SetFormatter(&nested.Formatter{
+	log.SetFormatter(&Formatter{
 		HideKeys:    false,
 		CallerFirst: true,
 	})

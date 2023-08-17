@@ -5,7 +5,6 @@ go 1.19
 require (
 	bitbucket.org/decimalteam/go-smart-node v0.2.1
 	cosmossdk.io/math v1.0.0-beta.4
-	github.com/antonfisher/nested-logrus-formatter v1.3.1
 	github.com/cosmos/cosmos-sdk v0.46.6
 	github.com/cosmos/ibc-go/v5 v5.1.0
 	github.com/dustin/go-humanize v1.0.0
