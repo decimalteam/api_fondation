@@ -103,6 +103,8 @@ func (f *Formatter) Format(entry *logrus.Entry) ([]byte, error) {
 		f.writeCaller(b, entry)
 	}
 
+	b.WriteString(" ")
+
 	// write fields
 	if f.FieldsOrder == nil {
 		f.writeFields(b, entry)
