@@ -51,7 +51,7 @@ func LogGinMiddleware() gin.HandlerFunc {
 			"STATUS":    statusCode,
 			"LATENCY":   latencyTime,
 			"CLIENT_IP": clientIP,
-		}).Info("HTTP REQUEST")
+		}).Println("HTTP REQUEST")
 
 		ctx.Next()
 	}
