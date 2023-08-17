@@ -1,4 +1,8 @@
+.PHONY: all
+
+all: set-tag push-tag
+
 set-tag:
-	git tag "v1.0.9"
+	git tag "v1.0.11"
 push-tag:
 	git push --tags
