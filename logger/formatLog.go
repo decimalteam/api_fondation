@@ -187,7 +187,7 @@ func (f *Formatter) writeField(b *bytes.Buffer, entry *logrus.Entry, field strin
 	if f.HideKeys {
 		fmt.Fprintf(b, "[%v]", entry.Data[field])
 	} else {
-		fmt.Fprintf(b, "%s=", field, colorBlue)
+		fmt.Fprintf(b, "\x1b[%d%s=", colorBlue, field)
 		fmt.Fprintf(b, "%v", entry.Data[field])
 	}
 
