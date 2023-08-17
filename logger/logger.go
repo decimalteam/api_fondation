@@ -8,16 +8,15 @@ import (
 	"time"
 )
 
-func GetLogger(logLevel uint32, fieldsOrder []string, timestampFormat string, hideKeys, noColors bool) *logrus.Logger {
-	return &logrus.Logger{
-		Level: logrus.Level(logLevel),
-		Formatter: &nested.Formatter{
-			FieldsOrder:     fieldsOrder,
-			TimestampFormat: timestampFormat,
-			HideKeys:        hideKeys,
-			NoColors:        noColors,
-		},
-	}
+func GetLogger() *logrus.Logger {
+
+	log := logrus.New()
+	log.SetFormatter(&nested.Formatter{
+		HideKeys:    true,
+		FieldsOrder: []string{"component", "category"},
+	})
+
+	return log
 }
 
 func LogGinMiddleware() gin.HandlerFunc {
