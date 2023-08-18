@@ -17,5 +17,5 @@ push-tag:
 go-lint:
 	golangci-lint run
 
-go-mod:
+vendor:
 	go mod vendor
