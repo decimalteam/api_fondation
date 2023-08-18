@@ -47,7 +47,7 @@ type Worker struct {
 	httpClient   *http.Client
 	cdc          params.EncodingConfig
 	logger       log.Logger
-	config       *Config
+	config       *clients.Config
 	hostname     string
 	rpcClient    *rpc.HTTP
 	web3Client   *web3.Client
@@ -70,17 +70,17 @@ func GetBlockResult(height int64) *types.Block {
 
 	cdc := encoding.MakeConfig(getModuleBasics())
 
-	rpcClient, err := clients.GetRpcClient(getConfig(), clients.GetHttpClient())
+	rpcClient, err := clients.GetRpcClient(clients.GetConfig(), clients.GetHttpClient())
 	if err != nil {
 		panicError(err)
 	}
 
-	web3Client, err := clients.GetWeb3Client(getConfig())
+	web3Client, err := clients.GetWeb3Client(clients.GetConfig())
 	if err != nil {
 		panicError(err)
 	}
 
-	ethRpcClient, err := clients.GetEthRpcClient(getConfig())
+	ethRpcClient, err := clients.GetEthRpcClient(clients.GetConfig())
 	if err != nil {
 		panicError(err)
 	}
@@ -110,7 +110,7 @@ func GetBlockResult(height int64) *types.Block {
 	web3Body := web3Block.Body()
 	web3Transactions := make([]*types.TransactionEVM, len(web3Body.Transactions))
 	for i, tx := range web3Body.Transactions {
-		web3Client, err := clients.GetWeb3Client(getConfig())
+		web3Client, err := clients.GetWeb3Client(clients.GetConfig())
 		if err != nil {
 			panicError(err)
 		}

@@ -1,4 +1,15 @@
+VERSION=1.0.28
+#VER_MAJ_MIN      := $(shell git describe --tags)
+VER_MAJ_MIN      := $(subst ., ,$(VERSION))
+VERSION        := $(word 1,$(VER_MAJ_MIN))
+MAJOR          := $(word 2,$(VER_MAJ_MIN))
+MINOR          := $(word 3,$(VER_MAJ_MIN))
+
+.PHONY: all
+
+all: set-tag push-tag
+
 set-tag:
-	git tag "v1.0.6"
+	git tag "v$(VERSION).$(MAJOR).$(MINOR)"
 push-tag:
 	git push --tags
