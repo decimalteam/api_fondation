@@ -19,3 +19,6 @@ go-lint:
 
 vendor:
 	go mod vendor
+
+tidy:
+	go mod tidy
