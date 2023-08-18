@@ -16,3 +16,6 @@ push-tag:
 
 go-lint:
 	golangci-lint run
+
+go-mod:
+	go mod vendor
