@@ -1,7 +1,7 @@
 package worker
 
 import (
-	coin "bitbucket.org/decimalteam/go-smart-node/x/coin"
+	"bitbucket.org/decimalteam/go-smart-node/x/coin"
 	"bitbucket.org/decimalteam/go-smart-node/x/legacy"
 	"bitbucket.org/decimalteam/go-smart-node/x/multisig"
 	"bitbucket.org/decimalteam/go-smart-node/x/swap"
@@ -18,7 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	fee "github.com/cosmos/ibc-go/v5/modules/apps/29-fee"
 	ibc "github.com/cosmos/ibc-go/v5/modules/core"
-	evm "github.com/evmos/ethermint/x/evm"
+	"github.com/evmos/ethermint/x/evm"
 
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	distrclient "github.com/cosmos/cosmos-sdk/x/distribution/client"
@@ -30,7 +30,7 @@ import (
 	ibcclientclient "github.com/cosmos/ibc-go/v5/modules/core/02-client/client"
 )
 
-func getModuleBasics() module.BasicManager {
+func GetModuleBasics() module.BasicManager {
 	// ModuleBasics defines the module BasicManager is in charge of setting up basic,
 	// non-dependant module elements, such as codec registration and genesis verification.
 	ModuleBasics := module.NewBasicManager(

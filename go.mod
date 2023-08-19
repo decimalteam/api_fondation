@@ -10,7 +10,6 @@ require (
 	github.com/dustin/go-humanize v1.0.0
 	github.com/ethereum/go-ethereum v1.10.26
 	github.com/evmos/ethermint v0.20.0-rc4
-	github.com/gemnasium/logrus-graylog-hook v2.0.7+incompatible
 	github.com/gin-gonic/gin v1.7.0
 	github.com/nats-io/nats.go v1.28.0
 	github.com/sirupsen/logrus v1.9.3

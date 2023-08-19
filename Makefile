@@ -13,3 +13,12 @@ set-tag:
 	git tag "v$(VERSION).$(MAJOR).$(MINOR)"
 push-tag:
 	git push --tags
+
+go-lint:
+	golangci-lint run
+
+vendor:
+	go mod vendor
+
+tidy:
+	go mod tidy
