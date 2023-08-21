@@ -40,14 +40,20 @@ func Parse(block Block) *types.Block {
 			Time:   block.Header.Time,
 			Height: block.Header.Height,
 		},
-		Data: types.BlockData{
-			Txs: nil,
-		},
 		Evidence:   block.Data.Evidence,
 		LastCommit: block.Data.LastCommit,
 		Emission:   strconv.Itoa(block.Data.Emission),
 		Rewards: []types.ProposerReward{
 			{Reward: strconv.Itoa(block.Data.Rewards)},
+		},
+		CommissionRewards: []types.CommissionReward{
+			{Amount: strconv.Itoa(block.Data.CommissionRewards)},
+		},
+		BeginBlockEvents: []types.Event{
+			{Type: strconv.Itoa(block.Data.BeginBlockEvents)},
+		},
+		EndBlockEvents: []types.Event{
+			{Type: strconv.Itoa(block.Data.EndBlockEvents)},
 		},
 	}
 
