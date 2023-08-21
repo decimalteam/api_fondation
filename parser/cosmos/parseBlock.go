@@ -1,5 +1,10 @@
 package cosmos
 
+import (
+	"bitbucket.org/decimalteam/api_fondation/types"
+	"strconv"
+)
+
 type Block struct {
 	ID     interface{} `json:"id"`
 	Header Header      `json:"header"`
@@ -24,4 +29,27 @@ type Data struct {
 type Header struct {
 	Time   string `json:"time"`
 	Height int    `json:"height"`
+}
+
+func Parse(block Block) *types.Block {
+	var res *types.Block
+
+	res = &types.Block{
+		ID: block.ID,
+		Header: Header{
+			Time:   block.Header.Time,
+			Height: block.Header.Height,
+		},
+		Data: types.BlockData{
+			Txs: nil,
+		},
+		Evidence:   block.Data.Evidence,
+		LastCommit: block.Data.LastCommit,
+		Emission:   strconv.Itoa(block.Data.Emission),
+		Rewards: []types.ProposerReward{
+			{Reward: strconv.Itoa(block.Data.Rewards)},
+		},
+	}
+
+	return res
 }
