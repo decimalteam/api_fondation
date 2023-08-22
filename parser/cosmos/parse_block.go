@@ -1,7 +1,10 @@
 package cosmos
 
 import (
-	"bitbucket.org/decimalteam/api_fondation/types"
+	"bitbucket.org/decimalteam/api_fondation/clients"
+	"context"
+	"fmt"
+	"math/big"
 	"strconv"
 )
 
@@ -31,31 +34,30 @@ type Header struct {
 	Height int    `json:"height"`
 }
 
-func Parse(block Block) *types.Block {
-	var res *types.Block
+func Parse(ctx context.Context, blockNumber *big.Int) (*Block, error) {
+	var res *Block
 
-	res = &types.Block{
-		ID: block.ID,
+	web3Client, err := clients.GetWeb3Client(clients.GetConfig())
+	if err != nil {
+		return nil, fmt.Errorf("get web3 client error: %v", err)
+	}
+
+	b, err := web3Client.BlockByNumber(ctx, blockNumber)
+	if err != nil {
+		return nil, fmt.Errorf("block by number error: %v", err)
+	}
+
+	res = &Block{
+		ID: b.Number().Int64(),
 		Header: Header{
-			Time:   block.Header.Time,
-			Height: block.Header.Height,
+			Time:   strconv.Itoa(int(b.Header().Time)),
+			Height: int(b.Number().Int64()),
 		},
-		Evidence:   block.Data.Evidence,
-		LastCommit: block.Data.LastCommit,
-		Emission:   strconv.Itoa(block.Data.Emission),
-		Rewards: []types.ProposerReward{
-			{Reward: strconv.Itoa(block.Data.Rewards)},
-		},
-		CommissionRewards: []types.CommissionReward{
-			{Amount: strconv.Itoa(block.Data.CommissionRewards)},
-		},
-		BeginBlockEvents: []types.Event{
-			{Type: strconv.Itoa(block.Data.BeginBlockEvents)},
-		},
-		EndBlockEvents: []types.Event{
-			{Type: strconv.Itoa(block.Data.EndBlockEvents)},
+		Data: Data{
+			Time:   strconv.FormatUint(b.Time(), 10),
+			Height: int(b.Number().Int64()),
 		},
 	}
 
-	return res
+	return res, nil
 }
