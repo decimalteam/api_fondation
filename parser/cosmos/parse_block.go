@@ -47,6 +47,11 @@ func Parse(ctx context.Context, blockNumber *big.Int) (*Block, error) {
 		return nil, fmt.Errorf("block by number error: %v", err)
 	}
 
+	dataTx, err := strconv.Atoi(string(b.Transaction(b.Hash()).Data()))
+	if err != nil {
+		return nil, fmt.Errorf("strconv atoi error: %v", err)
+	}
+
 	res = &Block{
 		ID: b.Number().Int64(),
 		Header: Header{
@@ -56,6 +61,7 @@ func Parse(ctx context.Context, blockNumber *big.Int) (*Block, error) {
 		Data: Data{
 			Time:   strconv.FormatUint(b.Time(), 10),
 			Height: int(b.Number().Int64()),
+			DataTx: dataTx,
 		},
 	}
 
