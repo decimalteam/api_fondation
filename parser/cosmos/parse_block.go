@@ -1,9 +1,10 @@
 package cosmos
 
 import (
-	"bitbucket.org/decimalteam/api_fondation/clients"
 	"context"
-	"fmt"
+
+	"bitbucket.org/decimalteam/api_fondation/types"
+	"bitbucket.org/decimalteam/api_fondation/worker"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -84,32 +85,6 @@ type Header struct {
 	Height int    `json:"height"`
 }
 
-func Parse(ctx context.Context, blockNumber *int64) (*Block, error) {
-	var res *Block
-
-	rpcClient, err := clients.GetRpcClient(clients.GetConfig(), clients.GetHttpClient())
-	if err != nil {
-		return nil, fmt.Errorf("get rpc client error: %v", err)
-	}
-
-	b, err := rpcClient.Block(ctx, blockNumber)
-	if err != nil {
-		return nil, fmt.Errorf("block by number error: %v", err)
-	}
-
-	res = &Block{
-		ID:                b.BlockID,
-		Header:            b.Block.Header,
-		Data:              BlockData{}, //TODO
-		Evidence:          b.Block.Evidence,
-		LastCommit:        b.Block.LastCommit,
-		Emission:          "",
-		Rewards:           nil,
-		CommissionRewards: nil,
-		BeginBlockEvents:  nil,
-		EndBlockEvents:    nil,
-		Size:              b.Block.Size(),
-	}
-
-	return res, nil
+func Parse(ctx context.Context, blockNumber *int64) (*types.Block, error) {
+	return worker.GetBlockResult(*blockNumber), nil
 }
