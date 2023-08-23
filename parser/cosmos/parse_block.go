@@ -85,6 +85,6 @@ type Header struct {
 	Height int    `json:"height"`
 }
 
-func Parse(ctx context.Context, blockNumber *int64) (*types.Block, error) {
+func Parse(blockNumber *int64) (*types.Block, error) {
 	return worker.GetBlockResult(*blockNumber), nil
 }
