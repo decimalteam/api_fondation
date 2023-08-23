@@ -1,8 +1,6 @@
 package cosmos
 
 import (
-	"context"
-
 	"bitbucket.org/decimalteam/api_fondation/types"
 	"bitbucket.org/decimalteam/api_fondation/worker"
 	sdk "github.com/cosmos/cosmos-sdk/types"
