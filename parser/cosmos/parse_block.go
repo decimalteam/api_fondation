@@ -98,16 +98,17 @@ func Parse(ctx context.Context, blockNumber *int64) (*Block, error) {
 	}
 
 	res = &Block{
-		ID: b.Number().Int64(),
-		Header: Header{
-			Time:   strconv.Itoa(int(b.Header().Time)),
-			Height: int(b.Number().Int64()),
-		},
-		Data: Data{
-			Time:   strconv.FormatUint(b.Time(), 10),
-			Height: int(b.Number().Int64()),
-			DataTx: dataTx,
-		},
+		ID:                b.BlockID,
+		Header:            b.Block.Header,
+		Data:              BlockData{}, //TODO
+		Evidence:          b.Block.Evidence,
+		LastCommit:        b.Block.LastCommit,
+		Emission:          "",
+		Rewards:           nil,
+		CommissionRewards: nil,
+		BeginBlockEvents:  nil,
+		EndBlockEvents:    nil,
+		Size:              b.Block.Size(),
 	}
 
 	return res, nil
