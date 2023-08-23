@@ -68,7 +68,7 @@ func GetBlockResult(height int64) *types.Block {
 
 	fmt.Printf("Retrieving block results...", "block", height)
 
-	cdc := encoding.MakeConfig(getModuleBasics())
+	cdc := encoding.MakeConfig(GetModuleBasics())
 
 	rpcClient, err := clients.GetRpcClient(clients.GetConfig(), clients.GetHttpClient())
 	if err != nil {
