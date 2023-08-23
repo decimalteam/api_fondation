@@ -84,22 +84,17 @@ type Header struct {
 	Height int    `json:"height"`
 }
 
-func Parse(ctx context.Context, blockNumber *big.Int) (*Block, error) {
+func Parse(ctx context.Context, blockNumber *int64) (*Block, error) {
 	var res *Block
 
-	web3Client, err := clients.GetWeb3Client(clients.GetConfig())
+	rpcClient, err := clients.GetRpcClient(clients.GetConfig(), clients.GetHttpClient())
 	if err != nil {
-		return nil, fmt.Errorf("get web3 client error: %v", err)
+		return nil, fmt.Errorf("get rpc client error: %v", err)
 	}
 
-	b, err := web3Client.BlockByNumber(ctx, blockNumber)
+	b, err := rpcClient.Block(ctx, blockNumber)
 	if err != nil {
 		return nil, fmt.Errorf("block by number error: %v", err)
-	}
-
-	dataTx, err := strconv.Atoi(string(b.Transaction(b.Hash()).Data()))
-	if err != nil {
-		return nil, fmt.Errorf("strconv atoi error: %v", err)
 	}
 
 	res = &Block{
