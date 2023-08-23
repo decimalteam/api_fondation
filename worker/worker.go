@@ -106,7 +106,7 @@ func GetBlockResult(height int64) *types.Block {
 	go FetchBlockWeb3(ctx, web3Client, height, web3BlockChan)
 
 	web3Block := <-web3BlockChan
-	go fetchBlockTxReceiptsWeb3(ethRpcClient, web3Block, web3ReceiptsChan)
+	go FetchBlockTxReceiptsWeb3(ethRpcClient, web3Block, web3ReceiptsChan)
 	web3Body := web3Block.Body()
 	web3Transactions := make([]*types.TransactionEVM, len(web3Body.Transactions))
 	for i, tx := range web3Body.Transactions {
@@ -350,7 +350,7 @@ func FetchBlockWeb3(ctx context.Context, web3Client *web3.Client, height int64, 
 	ch <- result
 }
 
-func fetchBlockTxReceiptsWeb3(ethRpcClient *ethrpc.Client, block *web3types.Block, ch chan web3types.Receipts) {
+func FetchBlockTxReceiptsWeb3(ethRpcClient *ethrpc.Client, block *web3types.Block, ch chan web3types.Receipts) {
 	txCount := len(block.Transactions())
 	results := make(web3types.Receipts, txCount)
 	requests := make([]ethrpc.BatchElem, txCount)
