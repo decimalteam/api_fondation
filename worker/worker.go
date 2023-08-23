@@ -103,7 +103,7 @@ func GetBlockResult(height int64) *types.Block {
 	txs := <-txsChan
 	results := <-resultsChan
 	size := <-sizeChan
-	go fetchBlockWeb3(ctx, web3Client, height, web3BlockChan)
+	go FetchBlockWeb3(ctx, web3Client, height, web3BlockChan)
 
 	web3Block := <-web3BlockChan
 	go fetchBlockTxReceiptsWeb3(ethRpcClient, web3Block, web3ReceiptsChan)
@@ -340,7 +340,7 @@ func fetchBlockResults(ctx context.Context, rpcClient *rpc.HTTP, cdc params.Enco
 	brch <- blockResults
 }
 
-func fetchBlockWeb3(ctx context.Context, web3Client *web3.Client, height int64, ch chan *web3types.Block) {
+func FetchBlockWeb3(ctx context.Context, web3Client *web3.Client, height int64, ch chan *web3types.Block) {
 
 	// Request block by number
 	result, err := web3Client.BlockByNumber(ctx, big.NewInt(height))
