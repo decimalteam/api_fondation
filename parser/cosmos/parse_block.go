@@ -1,15 +1,14 @@
 package cosmos
 
 import (
-	"bitbucket.org/decimalteam/api_fondation/types"
 	"bitbucket.org/decimalteam/api_fondation/worker"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type Block struct {
 	ID                interface{}        `json:"id"`
-	Header            interface{}        `json:"header"`
-	Data              BlockData          `json:"data"`
+	Header            Header             `json:"header"`
+	Data              BlockTx            `json:"data"`
 	Evidence          interface{}        `json:"evidence"`
 	LastCommit        interface{}        `json:"last_commit"`
 	Emission          string             `json:"emission"`
@@ -20,7 +19,7 @@ type Block struct {
 	Size              int                `json:"size"`
 }
 
-type BlockData struct {
+type BlockTx struct {
 	Txs []Tx `json:"txs"`
 }
 
@@ -83,6 +82,6 @@ type Header struct {
 	Height int    `json:"height"`
 }
 
-func Parse(blockNumber *int64) (*types.Block, error) {
+func Parse(blockNumber *int64) (*Block, error) {
 	return worker.GetBlockResult(*blockNumber), nil
 }
