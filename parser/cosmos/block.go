@@ -2,11 +2,10 @@ package cosmos
 
 import (
 	"bitbucket.org/decimalteam/api_fondation/worker"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type Block struct {
-	ID                interface{}        `json:"id"`
+	ID                BlockId            `json:"id"`
 	Header            Header             `json:"header"`
 	Data              BlockTx            `json:"data"`
 	Evidence          interface{}        `json:"evidence"`
@@ -21,38 +20,6 @@ type Block struct {
 
 type BlockTx struct {
 	Txs []Tx `json:"txs"`
-}
-
-type Tx struct {
-	Hash      string        `json:"hash"`
-	Log       []interface{} `json:"log"`
-	Code      uint32        `json:"code"`
-	Codespace string        `json:"codespace"`
-	Data      interface{}   `json:"data"`
-	GasUsed   int64         `json:"gas_used"`
-	GasWanted int64         `json:"gas_wanted"`
-	Info      TxInfo        `json:"info"`
-}
-
-type FailedTxLog struct {
-	Log string `json:"log"`
-}
-
-type TxMsg struct {
-	Type   string      `json:"type"`
-	Params interface{} `json:"params"`
-	From   []string    `json:"from"`
-}
-
-type TxFee struct {
-	Gas    uint64    `json:"gas"`
-	Amount sdk.Coins `json:"amount"`
-}
-
-type TxInfo struct {
-	Msgs []TxMsg `json:"msgs"`
-	Memo string  `json:"memo"`
-	Fee  TxFee   `json:"fee"`
 }
 
 type ProposerReward struct {
@@ -80,6 +47,10 @@ type Attribute struct {
 type Header struct {
 	Time   string `json:"time"`
 	Height int    `json:"height"`
+}
+
+type BlockId struct {
+	Hash string `json:"hash"`
 }
 
 func Parse(blockNumber *int64) (*Block, error) {
