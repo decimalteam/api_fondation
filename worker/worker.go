@@ -10,6 +10,7 @@ import (
 
 	"bitbucket.org/decimalteam/api_fondation/clients"
 	"bitbucket.org/decimalteam/api_fondation/events"
+	"bitbucket.org/decimalteam/api_fondation/parser/cosmos"
 	"bitbucket.org/decimalteam/api_fondation/types"
 	"github.com/cosmos/cosmos-sdk/simapp/params"
 	web3 "github.com/ethereum/go-ethereum/ethclient"
@@ -61,7 +62,7 @@ type ParseTask struct {
 	txNum  int
 }
 
-func GetBlockResult(height int64) *types.Block {
+func GetBlockResult(height int64) *cosmos.Block {
 	ctx := context.Background()
 
 	accum := events.NewEventAccumulator()
@@ -159,8 +160,8 @@ func GetBlockResult(height int64) *types.Block {
 	// TODO: move to event accumulator
 	// Retrieve emission and rewards
 	var emission string
-	var rewards []types.ProposerReward
-	var commissionRewards []types.CommissionReward
+	var rewards []cosmos.ProposerReward
+	var commissionRewards []cosmos.CommissionReward
 	for _, event := range results.EndBlockEvents {
 		switch event.Type {
 		case "emission":
@@ -208,7 +209,7 @@ func GetBlockResult(height int64) *types.Block {
 	)
 
 	// Create and fill Block object and then marshal to JSON
-	return &types.Block{
+	return &cosmos.Block{
 		ID:                block.BlockID,
 		Evidence:          block.Block.Evidence,
 		Header:            block.Block.Header,
@@ -220,13 +221,6 @@ func GetBlockResult(height int64) *types.Block {
 		EndBlockEvents:    parseEvents(results.EndBlockEvents),
 		BeginBlockEvents:  parseEvents(results.BeginBlockEvents),
 		Size:              size,
-		StateChanges:      *accum,
-		EVM: types.BlockEVM{
-			Header:       web3Block.Header(),
-			Transactions: web3Transactions,
-			Uncles:       web3Body.Uncles,
-			Receipts:     web3Receipts,
-		},
 	}
 }
 
