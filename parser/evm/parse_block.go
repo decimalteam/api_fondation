@@ -5,7 +5,6 @@ import (
 	"math/big"
 
 	"bitbucket.org/decimalteam/api_fondation/clients"
-	"bitbucket.org/decimalteam/api_fondation/types"
 	"bitbucket.org/decimalteam/api_fondation/worker"
 	web3hexutil "github.com/ethereum/go-ethereum/common/hexutil"
 	web3types "github.com/ethereum/go-ethereum/core/types"
@@ -60,7 +59,7 @@ func Parse(ctx context.Context, height int64) (*BlockEVM, error) {
 	}, nil
 }
 
-func getWeb3Transactions(web3Body *web3types.Body, web3ChainId *big.Int, web3Block *web3types.Block) ([]*types.TransactionEVM, error) {
+func getWeb3Transactions(web3Body *web3types.Body, web3ChainId *big.Int, web3Block *web3types.Block) ([]*TransactionEVM, error) {
 	web3Transactions := make([]*TransactionEVM, len(web3Body.Transactions))
 
 	for i, tx := range web3Body.Transactions {
@@ -69,7 +68,7 @@ func getWeb3Transactions(web3Body *web3types.Body, web3ChainId *big.Int, web3Blo
 			return nil, err
 		}
 
-		web3Transactions[i] = &types.TransactionEVM{
+		web3Transactions[i] = &TransactionEVM{
 			Type:             web3hexutil.Uint64(tx.Type()),
 			Hash:             tx.Hash(),
 			Nonce:            web3hexutil.Uint64(tx.Nonce()),
