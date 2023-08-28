@@ -186,7 +186,7 @@ func GetBlockResult(height int64) *cosmos.Block {
 
 		case "commission_reward":
 			// Parser commission reward
-			var reward types.CommissionReward
+			var reward cosmos.CommissionReward
 			for _, attr := range event.Attributes {
 				switch string(attr.Key) {
 				case "amount":
@@ -298,7 +298,7 @@ func fetchBlockResults(ctx context.Context, rpcClient *rpc.HTTP, cdc params.Enco
 	// Prepare block results by overall processing
 	var results []cosmos.Tx
 	for i, tx := range block.Block.Txs {
-		var result types.Tx
+		var result cosmos.Tx
 		var txLog []interface{}
 		txr := blockResults.TxsResults[i]
 
@@ -432,7 +432,7 @@ func DurationToString(d time.Duration) string {
 	return fmt.Sprintf("%s %s", amount, unit)
 }
 
-func parseTxInfo(tx sdk.Tx, cdc params.EncodingConfig) (txInfo types.TxInfo) {
+func parseTxInfo(tx sdk.Tx, cdc params.EncodingConfig) (txInfo cosmos.TxInfo) {
 	if tx == nil {
 		return
 	}
@@ -440,7 +440,7 @@ func parseTxInfo(tx sdk.Tx, cdc params.EncodingConfig) (txInfo types.TxInfo) {
 		params := make(map[string]interface{})
 		err := json.Unmarshal(cdc.Codec.MustMarshalJSON(rawMsg), &params)
 		panicError(err)
-		var msg types.TxMsg
+		var msg cosmos.TxMsg
 		msg.Type = sdk.MsgTypeURL(rawMsg)
 		msg.Params = params
 		for _, signer := range rawMsg.GetSigners() {
@@ -454,15 +454,15 @@ func parseTxInfo(tx sdk.Tx, cdc params.EncodingConfig) (txInfo types.TxInfo) {
 	return
 }
 
-func parseEvents(events []abci.Event) []types.Event {
-	var newEvents []types.Event
+func parseEvents(events []abci.Event) []cosmos.Event {
+	var newEvents []cosmos.Event
 	for _, ev := range events {
-		newEvent := types.Event{
+		newEvent := cosmos.Event{
 			Type:       ev.Type,
-			Attributes: []types.Attribute{},
+			Attributes: []cosmos.Attribute{},
 		}
 		for _, attr := range ev.Attributes {
-			newEvent.Attributes = append(newEvent.Attributes, types.Attribute{
+			newEvent.Attributes = append(newEvent.Attributes, cosmos.Attribute{
 				Key:   string(attr.Key),
 				Value: string(attr.Value),
 			})
