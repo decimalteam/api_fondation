@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"time"
 
+	"bitbucket.org/decimalteam/api_fondation/parser/evm"
+
 	"bitbucket.org/decimalteam/api_fondation/clients"
 	"bitbucket.org/decimalteam/api_fondation/events"
 	"bitbucket.org/decimalteam/api_fondation/parser/cosmos"
@@ -94,7 +96,7 @@ func GetBlockResult(height int64) *cosmos.Block {
 
 	// Fetch everything needed from Tendermint RPC and EVM
 	start := time.Now()
-	txsChan := make(chan []types.Tx)
+	txsChan := make(chan []cosmos.Tx)
 	resultsChan := make(chan *ctypes.ResultBlockResults)
 	sizeChan := make(chan int)
 	web3BlockChan := make(chan *web3types.Block)
@@ -109,7 +111,7 @@ func GetBlockResult(height int64) *cosmos.Block {
 	web3Block := <-web3BlockChan
 	go FetchBlockTxReceiptsWeb3(ethRpcClient, web3Block, web3ReceiptsChan)
 	web3Body := web3Block.Body()
-	web3Transactions := make([]*types.TransactionEVM, len(web3Body.Transactions))
+	web3Transactions := make([]*evm.TransactionEVM, len(web3Body.Transactions))
 	for i, tx := range web3Body.Transactions {
 		web3Client, err := clients.GetWeb3Client(clients.GetConfig())
 		if err != nil {
@@ -123,7 +125,7 @@ func GetBlockResult(height int64) *cosmos.Block {
 
 		msg, err := tx.AsMessage(web3types.NewLondonSigner(web3ChainId), nil)
 		panicError(err)
-		web3Transactions[i] = &types.TransactionEVM{
+		web3Transactions[i] = &evm.TransactionEVM{
 			Type:             web3hexutil.Uint64(tx.Type()),
 			Hash:             tx.Hash(),
 			Nonce:            web3hexutil.Uint64(tx.Nonce()),
@@ -142,7 +144,6 @@ func GetBlockResult(height int64) *cosmos.Block {
 			GasFeeCap:        (*web3hexutil.Big)(msg.GasFeeCap()),
 		}
 	}
-	web3Receipts := <-web3ReceiptsChan
 
 	for _, event := range results.BeginBlockEvents {
 		err := accum.AddEvent(event, "")
@@ -214,7 +215,7 @@ func GetBlockResult(height int64) *cosmos.Block {
 		Evidence:          block.Block.Evidence,
 		Header:            block.Block.Header,
 		LastCommit:        block.Block.LastCommit,
-		Data:              types.BlockData{Txs: txs},
+		Data:              cosmos.BlockTx{Txs: txs},
 		Emission:          emission,
 		Rewards:           rewards,
 		CommissionRewards: commissionRewards,
