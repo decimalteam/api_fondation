@@ -171,7 +171,7 @@ func GetBlockResult(height int64) *cosmos.Block {
 
 		case "proposer_reward":
 			// Parse proposer rewards
-			var reward types.ProposerReward
+			var reward cosmos.ProposerReward
 			for _, attr := range event.Attributes {
 				switch string(attr.Key) {
 				case "amount", "accum_rewards":
@@ -211,9 +211,12 @@ func GetBlockResult(height int64) *cosmos.Block {
 
 	// Create and fill Block object and then marshal to JSON
 	return &cosmos.Block{
-		ID:                block.BlockID,
-		Evidence:          block.Block.Evidence,
-		Header:            block.Block.Header,
+		ID:       cosmos.BlockId{Hash: block.BlockID.Hash.String()},
+		Evidence: block.Block.Evidence,
+		Header: cosmos.Header{
+			Time:   block.Block.Time.String(),
+			Height: int(block.Block.Height),
+		},
 		LastCommit:        block.Block.LastCommit,
 		Data:              cosmos.BlockTx{Txs: txs},
 		Emission:          emission,
@@ -273,7 +276,7 @@ func fetchBlockSize(ctx context.Context, rpcClient *rpc.HTTP, height int64, ch c
 	ch <- result.BlockMetas[0].BlockSize
 }
 
-func fetchBlockResults(ctx context.Context, rpcClient *rpc.HTTP, cdc params.EncodingConfig, height int64, block ctypes.ResultBlock, ea *events.EventAccumulator, ch chan []types.Tx, brch chan *ctypes.ResultBlockResults) {
+func fetchBlockResults(ctx context.Context, rpcClient *rpc.HTTP, cdc params.EncodingConfig, height int64, block ctypes.ResultBlock, ea *events.EventAccumulator, ch chan []cosmos.Tx, brch chan *ctypes.ResultBlockResults) {
 	var err error
 
 	// Request block results from the node
@@ -293,7 +296,7 @@ func fetchBlockResults(ctx context.Context, rpcClient *rpc.HTTP, cdc params.Enco
 	}
 
 	// Prepare block results by overall processing
-	var results []types.Tx
+	var results []cosmos.Tx
 	for i, tx := range block.Block.Txs {
 		var result types.Tx
 		var txLog []interface{}
