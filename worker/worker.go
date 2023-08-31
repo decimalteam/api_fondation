@@ -8,8 +8,6 @@ import (
 	"net/http"
 	"time"
 
-	"bitbucket.org/decimalteam/api_fondation/parser/evm"
-
 	"bitbucket.org/decimalteam/api_fondation/clients"
 	"bitbucket.org/decimalteam/api_fondation/events"
 	"bitbucket.org/decimalteam/api_fondation/parser/cosmos"
@@ -111,7 +109,7 @@ func GetBlockResult(height int64) *cosmos.Block {
 	web3Block := <-web3BlockChan
 	go FetchBlockTxReceiptsWeb3(ethRpcClient, web3Block, web3ReceiptsChan)
 	web3Body := web3Block.Body()
-	web3Transactions := make([]*evm.TransactionEVM, len(web3Body.Transactions))
+	web3Transactions := make([]*types.TransactionEVM, len(web3Body.Transactions))
 	for i, tx := range web3Body.Transactions {
 		web3Client, err = clients.GetWeb3Client(clients.GetConfig())
 		if err != nil {
@@ -125,7 +123,7 @@ func GetBlockResult(height int64) *cosmos.Block {
 
 		msg, err := tx.AsMessage(web3types.NewLondonSigner(web3ChainId), nil)
 		panicError(err)
-		web3Transactions[i] = &evm.TransactionEVM{
+		web3Transactions[i] = &types.TransactionEVM{
 			Type:             web3hexutil.Uint64(tx.Type()),
 			Hash:             tx.Hash(),
 			Nonce:            web3hexutil.Uint64(tx.Nonce()),
