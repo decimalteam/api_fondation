@@ -1,9 +1,5 @@
 package cosmos
 
-import (
-	"bitbucket.org/decimalteam/api_fondation/worker"
-)
-
 type Block struct {
 	ID                BlockId            `json:"id"`
 	Header            Header             `json:"header"`
@@ -53,6 +49,6 @@ type BlockId struct {
 	Hash string `json:"hash"`
 }
 
-func Parse(blockNumber *int64) (*Block, error) {
-	return worker.GetBlockResult(*blockNumber), nil
-}
+//func Parse(blockNumber *int64) (*Block, error) {
+//	return worker.GetBlockResult(*blockNumber), nil
+//}
