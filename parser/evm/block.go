@@ -1,6 +1,7 @@
 package evm
 
 import (
+	"bitbucket.org/decimalteam/api_fondation/types"
 	"context"
 	"math/big"
 
@@ -10,14 +11,7 @@ import (
 	web3types "github.com/ethereum/go-ethereum/core/types"
 )
 
-type BlockEVM struct {
-	Header       *web3types.Header    `json:"header"`
-	Transactions []*TransactionEVM    `json:"transactions"`
-	Uncles       []*web3types.Header  `json:"uncles"`
-	Receipts     []*web3types.Receipt `json:"receipts"`
-}
-
-func Parse(ctx context.Context, height int64) (*BlockEVM, error) {
+func Parse(ctx context.Context, height int64) (*types.BlockEVM, error) {
 	web3BlockChan := make(chan *web3types.Block)
 
 	web3Client, err := clients.GetWeb3Client(clients.GetConfig())
@@ -36,7 +30,7 @@ func Parse(ctx context.Context, height int64) (*BlockEVM, error) {
 		return nil, err
 	}
 
-	var web3Transactions []*TransactionEVM
+	var web3Transactions []*types.TransactionEVM
 	web3Transactions, err = getWeb3Transactions(web3Body, web3ChainId, web3Block)
 	if err != nil {
 		return nil, err
@@ -51,7 +45,7 @@ func Parse(ctx context.Context, height int64) (*BlockEVM, error) {
 	go worker.FetchBlockTxReceiptsWeb3(ethRpcClient, web3Block, web3ReceiptsChan)
 	web3Receipts := <-web3ReceiptsChan
 
-	return &BlockEVM{
+	return &types.BlockEVM{
 		Header:       web3Block.Header(),
 		Transactions: web3Transactions,
 		Uncles:       web3Body.Uncles,
@@ -59,8 +53,8 @@ func Parse(ctx context.Context, height int64) (*BlockEVM, error) {
 	}, nil
 }
 
-func getWeb3Transactions(web3Body *web3types.Body, web3ChainId *big.Int, web3Block *web3types.Block) ([]*TransactionEVM, error) {
-	web3Transactions := make([]*TransactionEVM, len(web3Body.Transactions))
+func getWeb3Transactions(web3Body *web3types.Body, web3ChainId *big.Int, web3Block *web3types.Block) ([]*types.TransactionEVM, error) {
+	web3Transactions := make([]*types.TransactionEVM, len(web3Body.Transactions))
 
 	for i, tx := range web3Body.Transactions {
 		msg, err := tx.AsMessage(web3types.NewLondonSigner(web3ChainId), nil)
@@ -68,7 +62,7 @@ func getWeb3Transactions(web3Body *web3types.Body, web3ChainId *big.Int, web3Blo
 			return nil, err
 		}
 
-		web3Transactions[i] = &TransactionEVM{
+		web3Transactions[i] = &types.TransactionEVM{
 			Type:             web3hexutil.Uint64(tx.Type()),
 			Hash:             tx.Hash(),
 			Nonce:            web3hexutil.Uint64(tx.Nonce()),
