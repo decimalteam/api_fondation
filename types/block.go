@@ -3,6 +3,7 @@ package types
 import (
 	"context"
 	"github.com/cosmos/cosmos-sdk/simapp/params"
+	web3types "github.com/ethereum/go-ethereum/core/types"
 	web3 "github.com/ethereum/go-ethereum/ethclient"
 	ethrpc "github.com/ethereum/go-ethereum/rpc"
 	"github.com/tendermint/tendermint/libs/log"
@@ -37,6 +38,13 @@ type ParseTask struct {
 	txNum  int
 }
 
+type BlockEVM struct {
+	Header       *web3types.Header    `json:"header"`
+	Transactions []*TransactionEVM    `json:"transactions"`
+	Uncles       []*web3types.Header  `json:"uncles"`
+	Receipts     []*web3types.Receipt `json:"receipts"`
+}
+
 //type Block struct {
 //	ID                interface{}             `json:"id"`
 //	Header            interface{}             `json:"header"`
@@ -55,11 +63,4 @@ type ParseTask struct {
 //
 //type BlockData struct {
 //	Txs []Tx `json:"txs"`
-//}
-//
-//type BlockEVM struct {
-//	Header       *web3types.Header    `json:"header"`
-//	Transactions []*TransactionEVM    `json:"transactions"`
-//	Uncles       []*web3types.Header  `json:"uncles"`
-//	Receipts     []*web3types.Receipt `json:"receipts"`
 //}
