@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
-	"net/http"
 	"time"
 
 	"bitbucket.org/decimalteam/api_fondation/clients"
@@ -15,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp/params"
 	web3 "github.com/ethereum/go-ethereum/ethclient"
 	"github.com/evmos/ethermint/encoding"
-	"github.com/tendermint/tendermint/libs/log"
 	rpc "github.com/tendermint/tendermint/rpc/client/http"
 
 	//evmtypes "github.com/evmos/ethermint/x/evm/types"
@@ -42,20 +40,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-type Worker struct {
-	ctx          context.Context
-	httpClient   *http.Client
-	cdc          params.EncodingConfig
-	logger       log.Logger
-	config       *clients.Config
-	hostname     string
-	rpcClient    *rpc.HTTP
-	web3Client   *web3.Client
-	web3ChainId  *big.Int
-	ethRpcClient *ethrpc.Client
-	query        chan *ParseTask
-}
 
 type ParseTask struct {
 	height int64
