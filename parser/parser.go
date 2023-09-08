@@ -11,25 +11,25 @@ const (
 )
 
 type Parser struct {
-	Interval         int               // number in second for check new data
-	Network          BlockchainNetwork // Name of network work mainnet, testnet
+	Interval         int // number in second for check new data
+	Network          BlockchainNetwork
 	IndexNode        string
 	ParseServiceHost string
 	NatsConfig       string
 }
 
-func NewParser(interval int, indexNode, parseServiceHost, natsConfig *string) *Parser {
+func NewParser(interval int, currNet BlockchainNetwork, indexNode, parseServiceHost, natsConfig string) *Parser {
 
 	return &Parser{
 		Interval:         interval,
-		Network:          "",
-		IndexNode:        "",
-		ParseServiceHost: "",
-		NatsConfig:       "",
+		Network:          currNet,
+		IndexNode:        indexNode,
+		ParseServiceHost: parseServiceHost,
+		NatsConfig:       natsConfig,
 	}
 }
 
-func (p *Parser) newBlock() *cosmos.Block {
+func (p *Parser) newBlock(ch chan cosmos.Block) {
 
-	return &cosmos.Block{}
+	ch <- cosmos.Block{}
 }
