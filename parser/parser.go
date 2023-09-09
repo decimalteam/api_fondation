@@ -29,7 +29,7 @@ func NewParser(interval int, currNet BlockchainNetwork, indexNode, parseServiceH
 	}
 }
 
-func (p *Parser) newBlock(ch chan cosmos.Block) {
+func (p *Parser) NewBlock(ch chan cosmos.Block) {
 
 	ch <- cosmos.Block{}
 }
