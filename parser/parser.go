@@ -4,6 +4,7 @@ import (
 	"bitbucket.org/decimalteam/api_fondation/parser/cosmos"
 	"encoding/json"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"github.com/tendermint/tendermint/abci/types"
 	"io"
 	"net/http"
@@ -23,9 +24,10 @@ type Parser struct {
 	IndexNode        string
 	ParseServiceHost string
 	NatsConfig       string
+	Logger           *logrus.Logger
 }
 
-func NewParser(interval int, currNet BlockchainNetwork, indexNode, parseServiceHost, natsConfig string) *Parser {
+func NewParser(interval int, currNet BlockchainNetwork, indexNode, parseServiceHost, natsConfig string, logger *logrus.Logger) *Parser {
 
 	return &Parser{
 		Interval:         interval,
@@ -33,6 +35,7 @@ func NewParser(interval int, currNet BlockchainNetwork, indexNode, parseServiceH
 		IndexNode:        indexNode,
 		ParseServiceHost: parseServiceHost,
 		NatsConfig:       natsConfig,
+		Logger:           logger,
 	}
 }
 
