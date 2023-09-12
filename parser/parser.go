@@ -7,7 +7,6 @@ import (
 	"github.com/tendermint/tendermint/abci/types"
 	"io"
 	"net/http"
-	"time"
 )
 
 type BlockchainNetwork string
@@ -62,20 +61,14 @@ func (p *Parser) NewBlock(ch chan cosmos.Block) {
 func getBlockFromDataSource(address string) (cosmos.Block, error) {
 	var res cosmos.Block
 
-	blockDataResponse, err := downloadBlockData(address)
+	_, err := downloadBlockData(address)
 	if err != nil {
 		fmt.Printf("block data request error: %v ", err)
 		return res, err
 	}
 
 	res = cosmos.Block{
-		height:          blockDataResponse.Block.Header.Height,
-		date:            blockDataResponse.Block.Header.Time.Format(time.RFC3339Nano),
-		hash:            blockDataResponse.BlockId.Hash,
-		blockTime:       int(blockDataResponse.Block.Header.Time.Unix()),
-		txsCount:        len(blockDataResponse.Block.Data.Txs),
-		validatorsCount: len(blockDataResponse.Block.LastCommit.Signatures),
-		proposerAddress: blockDataResponse.Block.Header.ProposerAddress,
+		//TODO: add mapping block data response to cosmos.Block
 	}
 
 	return res, nil
