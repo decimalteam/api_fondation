@@ -44,6 +44,13 @@ func (p *Parser) NewBlock(ch chan cosmos.Block) {
 		return
 	}
 	ch <- indexNodeBlock
+
+	parseServiceBlock, err := getBlockFromDataSource(p.ParseServiceHost)
+	if err != nil {
+		return
+	}
+	ch <- parseServiceBlock
+
 }
 
 func getBlockFromDataSource(address string) (cosmos.Block, error) {
