@@ -51,6 +51,12 @@ func (p *Parser) NewBlock(ch chan cosmos.Block) {
 	}
 	ch <- parseServiceBlock
 
+	natsBlock, err := getBlockFromDataSource(p.NatsConfig)
+	if err != nil {
+		return
+	}
+	ch <- natsBlock
+
 }
 
 func getBlockFromDataSource(address string) (cosmos.Block, error) {
