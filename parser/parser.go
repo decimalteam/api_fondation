@@ -1,6 +1,14 @@
 package parser
 
-import "bitbucket.org/decimalteam/api_fondation/parser/cosmos"
+import (
+	"bitbucket.org/decimalteam/api_fondation/parser/cosmos"
+	"encoding/json"
+	"fmt"
+	"github.com/tendermint/tendermint/abci/types"
+	"io"
+	"net/http"
+	"time"
+)
 
 type BlockchainNetwork string
 
@@ -32,4 +40,56 @@ func NewParser(interval int, currNet BlockchainNetwork, indexNode, parseServiceH
 func (p *Parser) NewBlock(ch chan cosmos.Block) {
 
 	ch <- cosmos.Block{}
+}
+
+func getBlockFromParser(height int) (Block, error) {
+	var res Block
+
+	blockDataResponse, err := downloadBlockData(fmt.Sprintf("%s%d", ParserAddress, height))
+	if err != nil {
+		fmt.Printf("blockchain request error: %v ", err)
+		return res, err
+	}
+
+	res = Block{
+		height:          blockDataResponse.Block.Header.Height,
+		date:            blockDataResponse.Block.Header.Time.Format(time.RFC3339Nano),
+		hash:            blockDataResponse.BlockId.Hash,
+		blockTime:       int(blockDataResponse.Block.Header.Time.Unix()),
+		txsCount:        len(blockDataResponse.Block.Data.Txs),
+		validatorsCount: len(blockDataResponse.Block.LastCommit.Signatures),
+		proposerAddress: blockDataResponse.Block.Header.ProposerAddress,
+	}
+
+	return res, nil
+}
+
+func downloadBlockData(path string) (*types.Response, error) {
+	request, err := http.NewRequest(http.MethodGet, path, nil)
+	if err != nil {
+		return nil, fmt.Errorf("get request error: %s", err)
+	}
+
+	request.Header = http.Header{
+		"Content-type": {"application/json"},
+	}
+
+	response, err := http.DefaultClient.Do(request)
+	if err != nil {
+		return nil, fmt.Errorf("get request error: %s", err)
+	}
+	defer response.Body.Close()
+
+	bytes, err := io.ReadAll(response.Body)
+	if err != nil {
+		return nil, fmt.Errorf("read response body error: %s", err)
+	}
+
+	var result types.Response
+	err = json.Unmarshal(bytes, &result)
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, nil
 }
