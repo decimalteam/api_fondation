@@ -39,19 +39,24 @@ func NewParser(interval int, currNet BlockchainNetwork, indexNode, parseServiceH
 
 func (p *Parser) NewBlock(ch chan cosmos.Block) {
 
-	ch <- cosmos.Block{}
+	block, err := getBlockFromParser(address)
+	if err != nil {
+		return
+	}
+
+	ch <- block
 }
 
-func getBlockFromParser(height int) (Block, error) {
-	var res Block
+func getBlockFromParser(address string) (cosmos.Block, error) {
+	var res cosmos.Block
 
-	blockDataResponse, err := downloadBlockData(fmt.Sprintf("%s%d", ParserAddress, height))
+	blockDataResponse, err := downloadBlockData(address)
 	if err != nil {
-		fmt.Printf("blockchain request error: %v ", err)
+		fmt.Printf("block data request error: %v ", err)
 		return res, err
 	}
 
-	res = Block{
+	res = cosmos.Block{
 		height:          blockDataResponse.Block.Header.Height,
 		date:            blockDataResponse.Block.Header.Time.Format(time.RFC3339Nano),
 		hash:            blockDataResponse.BlockId.Hash,
