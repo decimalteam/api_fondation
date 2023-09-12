@@ -39,15 +39,14 @@ func NewParser(interval int, currNet BlockchainNetwork, indexNode, parseServiceH
 
 func (p *Parser) NewBlock(ch chan cosmos.Block) {
 
-	block, err := getBlockFromParser(address)
+	indexNodeBlock, err := getBlockFromDataSource(p.IndexNode)
 	if err != nil {
 		return
 	}
-
-	ch <- block
+	ch <- indexNodeBlock
 }
 
-func getBlockFromParser(address string) (cosmos.Block, error) {
+func getBlockFromDataSource(address string) (cosmos.Block, error) {
 	var res cosmos.Block
 
 	blockDataResponse, err := downloadBlockData(address)
