@@ -4,6 +4,7 @@ import (
 	"bitbucket.org/decimalteam/api_fondation/parser/cosmos"
 	"encoding/json"
 	"fmt"
+	"github.com/nats-io/nats.go"
 	"github.com/sirupsen/logrus"
 	"github.com/tendermint/tendermint/abci/types"
 	"io"
@@ -53,12 +54,27 @@ func (p *Parser) NewBlock(ch chan cosmos.Block) {
 	}
 	ch <- parseServiceBlock
 
-	natsBlock, err := getBlockFromDataSource(p.NatsConfig)
+	natsBlock, err := getBlockFromNats(p.NatsConfig)
 	if err != nil {
 		return
 	}
 	ch <- natsBlock
 
+}
+
+func getBlockFromNats(natsConfig string) (cosmos.Block, error) {
+	var res cosmos.Block
+
+	nc, err := nats.Connect(natsConfig)
+	if err != nil {
+		fmt.Printf("nats connect error: %v ", err)
+		return res, err
+	}
+	nc.Close()
+
+	//TODO: get msgs from mats
+
+	return res, nil
 }
 
 func getBlockFromDataSource(address string) (cosmos.Block, error) {
