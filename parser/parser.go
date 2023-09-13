@@ -9,6 +9,7 @@ import (
 	"github.com/tendermint/tendermint/abci/types"
 	"io"
 	"net/http"
+	"sync"
 )
 
 type BlockchainNetwork string
@@ -71,6 +72,10 @@ func getBlockFromNats(natsConfig string) (cosmos.Block, error) {
 		return res, err
 	}
 	nc.Close()
+
+	wg := sync.WaitGroup{}
+
+	wg.Wait()
 
 	//TODO: get msgs from mats
 
