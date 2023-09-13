@@ -18,6 +18,8 @@ const (
 	MainNet BlockchainNetwork = "https://node.decimalchain.com"
 	TestNet BlockchainNetwork = "https://testnet-val.decimalchain.com"
 	DevNet  BlockchainNetwork = "https://devnet-val.decimalchain.com"
+
+	blockSubject = "block-subject"
 )
 
 type Parser struct {
@@ -74,6 +76,15 @@ func getBlockFromNats(natsConfig string) (cosmos.Block, error) {
 	nc.Close()
 
 	wg := sync.WaitGroup{}
+	wg.Add(1)
+
+	if _, err = nc.Subscribe(blockSubject, func(msg *nats.Msg) {
+		wg.Done()
+	}); err != nil {
+		fmt.Printf("nats subscribe error: %v ", err)
+		return res, err
+
+	}
 
 	wg.Wait()
 
