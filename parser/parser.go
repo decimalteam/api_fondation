@@ -3,6 +3,7 @@ package parser
 import (
 	"bitbucket.org/decimalteam/api_fondation/clients"
 	"bitbucket.org/decimalteam/api_fondation/parser/cosmos"
+	"bitbucket.org/decimalteam/api_fondation/worker"
 	"encoding/json"
 	"fmt"
 	"github.com/nats-io/nats.go"
@@ -76,30 +77,40 @@ func getBlockFromIndexer(indexerNode string) (cosmos.Block, error) {
 	url := fmt.Sprintf("%s/getWork", indexerNode)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		fmt.Printf("get blocke from indexer error: %v", err)
+		fmt.Printf("get block from indexer error: %v", err)
 		return res, err
 	}
-	req.Header.Set("X-Worker", w.hostname)
+
+	hostname, err := clients.GetHostName()
+	if err != nil {
+		fmt.Printf("get hostname error: %v", err)
+		return res, err
+	}
+	req.Header.Set("X-Worker", hostname)
 
 	clients.GetHttpClient()
 	resp, err := clients.GetHttpClient().Do(req)
 	if err != nil {
-		fmt.Printf("get blocke from indexer error: %v", err)
+		fmt.Printf("get block from indexer error: %v", err)
 		return res, err
 	}
 	defer resp.Body.Close()
 
 	// Parse response
 	bodyBytes, err := io.ReadAll(resp.Body)
-	w.panicError(err)
-	height, err := strconv.Atoi(string(bodyBytes))
-	w.panicError(err)
-
-	// Send work to the channel
-	w.query <- &ParseTask{
-		height: int64(height),
-		txNum:  -1,
+	if err != nil {
+		fmt.Printf("get block from indexer error: %v", err)
+		return res, err
 	}
+	height, err := strconv.Atoi(string(bodyBytes))
+	if err != nil {
+		fmt.Printf("get block from indexer error: %v", err)
+		return res, err
+	}
+
+	res = worker.GetBlockResult(int64(height))
+
+	return res, nil
 }
 
 func getBlockFromNats(natsConfig string) (cosmos.Block, error) {
