@@ -10,7 +10,7 @@ import (
 	"os"
 )
 
-func getHostName() (string, error) {
+func GetHostName() (string, error) {
 	hostname, err := os.Hostname()
 	if err != nil {
 		return "", err
