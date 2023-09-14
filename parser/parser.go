@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"bitbucket.org/decimalteam/api_fondation/clients"
 	"bitbucket.org/decimalteam/api_fondation/parser/cosmos"
 	"encoding/json"
 	"fmt"
@@ -9,6 +10,7 @@ import (
 	"github.com/tendermint/tendermint/abci/types"
 	"io"
 	"net/http"
+	"strconv"
 	"sync"
 )
 
@@ -31,6 +33,9 @@ type Parser struct {
 	Logger           *logrus.Logger
 }
 
+type BlockData struct {
+}
+
 func NewParser(interval int, currNet BlockchainNetwork, indexNode, parseServiceHost, natsConfig string, logger *logrus.Logger) *Parser {
 
 	return &Parser{
@@ -45,7 +50,7 @@ func NewParser(interval int, currNet BlockchainNetwork, indexNode, parseServiceH
 
 func (p *Parser) NewBlock(ch chan cosmos.Block) {
 
-	indexNodeBlock, err := getBlockFromDataSource(p.IndexNode)
+	indexNodeBlock, err := getBlockFromIndexer(p.IndexNode)
 	if err != nil {
 		return
 	}
@@ -63,6 +68,38 @@ func (p *Parser) NewBlock(ch chan cosmos.Block) {
 	}
 	ch <- natsBlock
 
+}
+
+func getBlockFromIndexer(indexerNode string) (cosmos.Block, error) {
+	var res cosmos.Block
+
+	url := fmt.Sprintf("%s/getWork", indexerNode)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		fmt.Printf("get blocke from indexer error: %v", err)
+		return res, err
+	}
+	req.Header.Set("X-Worker", w.hostname)
+
+	clients.GetHttpClient()
+	resp, err := clients.GetHttpClient().Do(req)
+	if err != nil {
+		fmt.Printf("get blocke from indexer error: %v", err)
+		return res, err
+	}
+	defer resp.Body.Close()
+
+	// Parse response
+	bodyBytes, err := io.ReadAll(resp.Body)
+	w.panicError(err)
+	height, err := strconv.Atoi(string(bodyBytes))
+	w.panicError(err)
+
+	// Send work to the channel
+	w.query <- &ParseTask{
+		height: int64(height),
+		txNum:  -1,
+	}
 }
 
 func getBlockFromNats(natsConfig string) (cosmos.Block, error) {
