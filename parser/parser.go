@@ -49,7 +49,7 @@ func NewParser(interval int, currNet BlockchainNetwork, indexNode, parseServiceH
 	}
 }
 
-func (p *Parser) NewBlock(ch chan cosmos.Block) {
+func (p *Parser) NewBlock(ch chan *cosmos.Block) {
 
 	indexNodeBlock, err := getBlockFromIndexer(p.IndexNode)
 	if err != nil {
@@ -71,8 +71,8 @@ func (p *Parser) NewBlock(ch chan cosmos.Block) {
 
 }
 
-func getBlockFromIndexer(indexerNode string) (cosmos.Block, error) {
-	var res cosmos.Block
+func getBlockFromIndexer(indexerNode string) (*cosmos.Block, error) {
+	var res *cosmos.Block
 
 	url := fmt.Sprintf("%s/getWork", indexerNode)
 	req, err := http.NewRequest("GET", url, nil)
@@ -113,8 +113,8 @@ func getBlockFromIndexer(indexerNode string) (cosmos.Block, error) {
 	return res, nil
 }
 
-func getBlockFromNats(natsConfig string) (cosmos.Block, error) {
-	var res cosmos.Block
+func getBlockFromNats(natsConfig string) (*cosmos.Block, error) {
+	var res *cosmos.Block
 
 	nc, err := nats.Connect(natsConfig)
 	if err != nil {
@@ -141,8 +141,8 @@ func getBlockFromNats(natsConfig string) (cosmos.Block, error) {
 	return res, nil
 }
 
-func getBlockFromDataSource(address string) (cosmos.Block, error) {
-	var res cosmos.Block
+func getBlockFromDataSource(address string) (*cosmos.Block, error) {
+	var res *cosmos.Block
 
 	_, err := downloadBlockData(address)
 	if err != nil {
@@ -150,7 +150,7 @@ func getBlockFromDataSource(address string) (cosmos.Block, error) {
 		return res, err
 	}
 
-	res = cosmos.Block{
+	res = &cosmos.Block{
 		//TODO: add mapping block data response to cosmos.Block
 	}
 
