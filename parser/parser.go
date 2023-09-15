@@ -50,7 +50,7 @@ func NewParser(interval int, currNet BlockchainNetwork, indexNode, parseServiceH
 }
 
 func (p *Parser) NewBlock(ch chan *cosmos.Block) {
-	var blockData *BlockData
+	var blockData = new(BlockData)
 
 	indexNodeBlock, err := getBlockFromIndexer(p.IndexNode)
 	if err != nil {
