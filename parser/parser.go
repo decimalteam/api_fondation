@@ -35,6 +35,9 @@ type Parser struct {
 }
 
 type BlockData struct {
+	IndexerBlock      *cosmos.Block
+	ParseServiceBlock *cosmos.Block
+	NatsBlock         *cosmos.Block
 }
 
 func NewParser(interval int, currNet BlockchainNetwork, indexNode, parseServiceHost, natsConfig string, logger *logrus.Logger) *Parser {
