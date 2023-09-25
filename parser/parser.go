@@ -1,7 +1,9 @@
 package parser
 
 import (
+	"bitbucket.org/decimalteam/api_fondation/clients"
 	"bitbucket.org/decimalteam/api_fondation/parser/cosmos"
+	"bitbucket.org/decimalteam/api_fondation/worker"
 	"encoding/json"
 	"fmt"
 	"github.com/nats-io/nats.go"
@@ -9,6 +11,7 @@ import (
 	"github.com/tendermint/tendermint/abci/types"
 	"io"
 	"net/http"
+	"strconv"
 	"sync"
 )
 
