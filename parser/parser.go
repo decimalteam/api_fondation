@@ -113,8 +113,32 @@ func getBlockFromDataSource(address string) (*cosmos.Block, error) {
 		return res, err
 	}
 
-	res = &cosmos.Block{
-		//TODO: add mapping block data response to cosmos.Block
+	req, err := http.NewRequest("GET", address, nil)
+	if err != nil {
+		fmt.Printf("get block from indexer error: %v", err)
+		return res, err
+	}
+
+	hostname, err := clients.GetHostName()
+	if err != nil {
+		fmt.Printf("get hostname error: %v", err)
+		return res, err
+	}
+	req.Header.Set("X-Worker", hostname)
+
+	clients.GetHttpClient()
+	resp, err := clients.GetHttpClient().Do(req)
+	if err != nil {
+		fmt.Printf("get block from indexer error: %v", err)
+		return res, err
+	}
+	defer resp.Body.Close()
+
+	// Parse response
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Printf("get block from indexer error: %v", err)
+		return res, err
 	}
 
 	return res, nil
