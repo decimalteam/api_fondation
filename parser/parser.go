@@ -140,6 +140,13 @@ func getBlockFromDataSource(address string) (*cosmos.Block, error) {
 		fmt.Printf("get block from indexer error: %v", err)
 		return res, err
 	}
+	height, err := strconv.Atoi(string(bodyBytes))
+	if err != nil {
+		fmt.Printf("get block from indexer error: %v", err)
+		return res, err
+	}
+
+	res = worker.GetBlockResult(int64(height))
 
 	return res, nil
 }
