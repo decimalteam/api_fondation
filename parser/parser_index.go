@@ -3,6 +3,7 @@ package parser
 import (
 	"bitbucket.org/decimalteam/api_fondation/clients"
 	"bitbucket.org/decimalteam/api_fondation/parser/cosmos"
+	"bitbucket.org/decimalteam/api_fondation/worker"
 	"fmt"
 	"io"
 	"net/http"
