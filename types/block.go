@@ -4,13 +4,6 @@ import (
 	web3types "github.com/ethereum/go-ethereum/core/types"
 )
 
-type Config struct {
-	IndexerEndpoint string
-	RpcEndpoint     string
-	Web3Endpoint    string
-	WorkersCount    int
-}
-
 type ParseTask struct {
 	height int64
 	txNum  int
