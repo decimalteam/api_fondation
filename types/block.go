@@ -1,30 +1,8 @@
 package types
 
 import (
-	"context"
-	"github.com/cosmos/cosmos-sdk/simapp/params"
 	web3types "github.com/ethereum/go-ethereum/core/types"
-	web3 "github.com/ethereum/go-ethereum/ethclient"
-	ethrpc "github.com/ethereum/go-ethereum/rpc"
-	"github.com/tendermint/tendermint/libs/log"
-	rpc "github.com/tendermint/tendermint/rpc/client/http"
-	"math/big"
-	"net/http"
 )
-
-type Worker struct {
-	ctx          context.Context
-	httpClient   *http.Client
-	cdc          params.EncodingConfig
-	logger       log.Logger
-	config       *Config
-	hostname     string
-	rpcClient    *rpc.HTTP
-	web3Client   *web3.Client
-	web3ChainId  *big.Int
-	ethRpcClient *ethrpc.Client
-	query        chan *ParseTask
-}
 
 type Config struct {
 	IndexerEndpoint string
