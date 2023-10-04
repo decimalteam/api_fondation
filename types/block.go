@@ -4,11 +4,6 @@ import (
 	web3types "github.com/ethereum/go-ethereum/core/types"
 )
 
-type ParseTask struct {
-	height int64
-	txNum  int
-}
-
 type BlockEVM struct {
 	Header       *web3types.Header    `json:"header"`
 	Transactions []*TransactionEVM    `json:"transactions"`
