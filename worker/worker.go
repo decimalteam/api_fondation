@@ -1,6 +1,7 @@
 package worker
 
 import (
+	cosmos2 "bitbucket.org/decimalteam/api_fondation/pkg/parser/cosmos"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -9,7 +10,6 @@ import (
 
 	"bitbucket.org/decimalteam/api_fondation/clients"
 	"bitbucket.org/decimalteam/api_fondation/events"
-	"bitbucket.org/decimalteam/api_fondation/parser/cosmos"
 	"bitbucket.org/decimalteam/api_fondation/types"
 	"github.com/cosmos/cosmos-sdk/simapp/params"
 	web3 "github.com/ethereum/go-ethereum/ethclient"
@@ -46,7 +46,7 @@ type ParseTask struct {
 	txNum  int
 }
 
-func GetBlockResult(height int64) *cosmos.Block {
+func GetBlockResult(height int64) *cosmos2.Block {
 	ctx := context.Background()
 
 	accum := events.NewEventAccumulator()
@@ -78,7 +78,7 @@ func GetBlockResult(height int64) *cosmos.Block {
 
 	// Fetch everything needed from Tendermint RPC and EVM
 	start := time.Now()
-	txsChan := make(chan []cosmos.Tx)
+	txsChan := make(chan []cosmos2.Tx)
 	resultsChan := make(chan *ctypes.ResultBlockResults)
 	sizeChan := make(chan int)
 	web3BlockChan := make(chan *web3types.Block)
@@ -143,8 +143,8 @@ func GetBlockResult(height int64) *cosmos.Block {
 	// TODO: move to event accumulator
 	// Retrieve emission and rewards
 	var emission string
-	var rewards []cosmos.ProposerReward
-	var commissionRewards []cosmos.CommissionReward
+	var rewards []cosmos2.ProposerReward
+	var commissionRewards []cosmos2.CommissionReward
 	for _, event := range results.EndBlockEvents {
 		switch event.Type {
 		case "emission":
@@ -153,7 +153,7 @@ func GetBlockResult(height int64) *cosmos.Block {
 
 		case "proposer_reward":
 			// Parse proposer rewards
-			var reward cosmos.ProposerReward
+			var reward cosmos2.ProposerReward
 			for _, attr := range event.Attributes {
 				switch string(attr.Key) {
 				case "amount", "accum_rewards":
@@ -168,7 +168,7 @@ func GetBlockResult(height int64) *cosmos.Block {
 
 		case "commission_reward":
 			// Parser commission reward
-			var reward cosmos.CommissionReward
+			var reward cosmos2.CommissionReward
 			for _, attr := range event.Attributes {
 				switch string(attr.Key) {
 				case "amount":
@@ -192,15 +192,15 @@ func GetBlockResult(height int64) *cosmos.Block {
 	)
 
 	// Create and fill Block object and then marshal to JSON
-	return &cosmos.Block{
-		ID:       cosmos.BlockId{Hash: block.BlockID.Hash.String()},
+	return &cosmos2.Block{
+		ID:       cosmos2.BlockId{Hash: block.BlockID.Hash.String()},
 		Evidence: block.Block.Evidence,
-		Header: cosmos.Header{
+		Header: cosmos2.Header{
 			Time:   block.Block.Time.String(),
 			Height: int(block.Block.Height),
 		},
 		LastCommit:        block.Block.LastCommit,
-		Data:              cosmos.BlockTx{Txs: txs},
+		Data:              cosmos2.BlockTx{Txs: txs},
 		Emission:          emission,
 		Rewards:           rewards,
 		CommissionRewards: commissionRewards,
@@ -258,7 +258,7 @@ func fetchBlockSize(ctx context.Context, rpcClient *rpc.HTTP, height int64, ch c
 	ch <- result.BlockMetas[0].BlockSize
 }
 
-func fetchBlockResults(ctx context.Context, rpcClient *rpc.HTTP, cdc params.EncodingConfig, height int64, block ctypes.ResultBlock, ea *events.EventAccumulator, ch chan []cosmos.Tx, brch chan *ctypes.ResultBlockResults) {
+func fetchBlockResults(ctx context.Context, rpcClient *rpc.HTTP, cdc params.EncodingConfig, height int64, block ctypes.ResultBlock, ea *events.EventAccumulator, ch chan []cosmos2.Tx, brch chan *ctypes.ResultBlockResults) {
 	var err error
 
 	// Request block results from the node
@@ -278,9 +278,9 @@ func fetchBlockResults(ctx context.Context, rpcClient *rpc.HTTP, cdc params.Enco
 	}
 
 	// Prepare block results by overall processing
-	var results []cosmos.Tx
+	var results []cosmos2.Tx
 	for i, tx := range block.Block.Txs {
-		var result cosmos.Tx
+		var result cosmos2.Tx
 		var txLog []interface{}
 		txr := blockResults.TxsResults[i]
 
@@ -414,7 +414,7 @@ func DurationToString(d time.Duration) string {
 	return fmt.Sprintf("%s %s", amount, unit)
 }
 
-func parseTxInfo(tx sdk.Tx, cdc params.EncodingConfig) (txInfo cosmos.TxInfo) {
+func parseTxInfo(tx sdk.Tx, cdc params.EncodingConfig) (txInfo cosmos2.TxInfo) {
 	if tx == nil {
 		return
 	}
@@ -422,7 +422,7 @@ func parseTxInfo(tx sdk.Tx, cdc params.EncodingConfig) (txInfo cosmos.TxInfo) {
 		params := make(map[string]interface{})
 		err := json.Unmarshal(cdc.Codec.MustMarshalJSON(rawMsg), &params)
 		panicError(err)
-		var msg cosmos.TxMsg
+		var msg cosmos2.TxMsg
 		msg.Type = sdk.MsgTypeURL(rawMsg)
 		msg.Params = params
 		for _, signer := range rawMsg.GetSigners() {
@@ -436,15 +436,15 @@ func parseTxInfo(tx sdk.Tx, cdc params.EncodingConfig) (txInfo cosmos.TxInfo) {
 	return
 }
 
-func parseEvents(events []abci.Event) []cosmos.Event {
-	var newEvents []cosmos.Event
+func parseEvents(events []abci.Event) []cosmos2.Event {
+	var newEvents []cosmos2.Event
 	for _, ev := range events {
-		newEvent := cosmos.Event{
+		newEvent := cosmos2.Event{
 			Type:       ev.Type,
-			Attributes: []cosmos.Attribute{},
+			Attributes: []cosmos2.Attribute{},
 		}
 		for _, attr := range ev.Attributes {
-			newEvent.Attributes = append(newEvent.Attributes, cosmos.Attribute{
+			newEvent.Attributes = append(newEvent.Attributes, cosmos2.Attribute{
 				Key:   string(attr.Key),
 				Value: string(attr.Value),
 			})
