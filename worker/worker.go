@@ -1,7 +1,6 @@
 package worker
 
 import (
-	cosmos2 "bitbucket.org/decimalteam/api_fondation/pkg/parser/cosmos"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -10,6 +9,7 @@ import (
 
 	"bitbucket.org/decimalteam/api_fondation/clients"
 	"bitbucket.org/decimalteam/api_fondation/events"
+	"bitbucket.org/decimalteam/api_fondation/pkg/parser/cosmos"
 	"bitbucket.org/decimalteam/api_fondation/types"
 	"github.com/cosmos/cosmos-sdk/simapp/params"
 	web3 "github.com/ethereum/go-ethereum/ethclient"
@@ -46,7 +46,7 @@ type ParseTask struct {
 	txNum  int
 }
 
-func GetBlockResult(height int64) *cosmos2.Block {
+func GetBlockResult(height int64) *cosmos.Block {
 	ctx := context.Background()
 
 	accum := events.NewEventAccumulator()
