@@ -414,7 +414,7 @@ func DurationToString(d time.Duration) string {
 	return fmt.Sprintf("%s %s", amount, unit)
 }
 
-func parseTxInfo(tx sdk.Tx, cdc params.EncodingConfig) (txInfo cosmos2.TxInfo) {
+func parseTxInfo(tx sdk.Tx, cdc params.EncodingConfig) (txInfo cosmos.TxInfo) {
 	if tx == nil {
 		return
 	}
@@ -422,7 +422,7 @@ func parseTxInfo(tx sdk.Tx, cdc params.EncodingConfig) (txInfo cosmos2.TxInfo) {
 		parameters := make(map[string]interface{})
 		err := json.Unmarshal(cdc.Codec.MustMarshalJSON(rawMsg), &parameters)
 		panicError(err)
-		var msg cosmos2.TxMsg
+		var msg cosmos.TxMsg
 		msg.Type = sdk.MsgTypeURL(rawMsg)
 		msg.Params = parameters
 		for _, signer := range rawMsg.GetSigners() {
