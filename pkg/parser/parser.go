@@ -133,7 +133,12 @@ func getBlockFromDataSource(address string) (*cosmos.Block, error) {
 		fmt.Printf("get block from indexer error: %v", err)
 		return res, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		defErr := resp.Body.Close()
+		if defErr != nil {
+			fmt.Printf("http response close error: %v", err)
+		}
+	}()
 
 	// Parse response
 	bodyBytes, err := io.ReadAll(resp.Body)
