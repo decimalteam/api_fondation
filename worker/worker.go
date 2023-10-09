@@ -436,15 +436,15 @@ func parseTxInfo(tx sdk.Tx, cdc params.EncodingConfig) (txInfo cosmos.TxInfo) {
 	return
 }
 
-func parseEvents(events []abci.Event) []cosmos2.Event {
-	var newEvents []cosmos2.Event
+func parseEvents(events []abci.Event) []cosmos.Event {
+	var newEvents []cosmos.Event
 	for _, ev := range events {
-		newEvent := cosmos2.Event{
+		newEvent := cosmos.Event{
 			Type:       ev.Type,
-			Attributes: []cosmos2.Attribute{},
+			Attributes: []cosmos.Attribute{},
 		}
 		for _, attr := range ev.Attributes {
-			newEvent.Attributes = append(newEvent.Attributes, cosmos2.Attribute{
+			newEvent.Attributes = append(newEvent.Attributes, cosmos.Attribute{
 				Key:   string(attr.Key),
 				Value: string(attr.Value),
 			})
