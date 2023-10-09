@@ -78,7 +78,7 @@ func GetBlockResult(height int64) *cosmos.Block {
 
 	// Fetch everything needed from Tendermint RPC and EVM
 	start := time.Now()
-	txsChan := make(chan []cosmos2.Tx)
+	txsChan := make(chan []cosmos.Tx)
 	resultsChan := make(chan *ctypes.ResultBlockResults)
 	sizeChan := make(chan int)
 	web3BlockChan := make(chan *web3types.Block)
@@ -143,8 +143,8 @@ func GetBlockResult(height int64) *cosmos.Block {
 	// TODO: move to event accumulator
 	// Retrieve emission and rewards
 	var emission string
-	var rewards []cosmos2.ProposerReward
-	var commissionRewards []cosmos2.CommissionReward
+	var rewards []cosmos.ProposerReward
+	var commissionRewards []cosmos.CommissionReward
 	for _, event := range results.EndBlockEvents {
 		switch event.Type {
 		case "emission":
@@ -153,7 +153,7 @@ func GetBlockResult(height int64) *cosmos.Block {
 
 		case "proposer_reward":
 			// Parse proposer rewards
-			var reward cosmos2.ProposerReward
+			var reward cosmos.ProposerReward
 			for _, attr := range event.Attributes {
 				switch string(attr.Key) {
 				case "amount", "accum_rewards":
@@ -168,7 +168,7 @@ func GetBlockResult(height int64) *cosmos.Block {
 
 		case "commission_reward":
 			// Parser commission reward
-			var reward cosmos2.CommissionReward
+			var reward cosmos.CommissionReward
 			for _, attr := range event.Attributes {
 				switch string(attr.Key) {
 				case "amount":
