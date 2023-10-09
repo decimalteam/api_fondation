@@ -192,15 +192,15 @@ func GetBlockResult(height int64) *cosmos.Block {
 	)
 
 	// Create and fill Block object and then marshal to JSON
-	return &cosmos2.Block{
-		ID:       cosmos2.BlockId{Hash: block.BlockID.Hash.String()},
+	return &cosmos.Block{
+		ID:       cosmos.BlockId{Hash: block.BlockID.Hash.String()},
 		Evidence: block.Block.Evidence,
-		Header: cosmos2.Header{
+		Header: cosmos.Header{
 			Time:   block.Block.Time.String(),
 			Height: int(block.Block.Height),
 		},
 		LastCommit:        block.Block.LastCommit,
-		Data:              cosmos2.BlockTx{Txs: txs},
+		Data:              cosmos.BlockTx{Txs: txs},
 		Emission:          emission,
 		Rewards:           rewards,
 		CommissionRewards: commissionRewards,
