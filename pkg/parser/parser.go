@@ -171,7 +171,12 @@ func downloadBlockData(path string) (*types.Response, error) {
 	if err != nil {
 		return nil, fmt.Errorf("get request error: %s", err)
 	}
-	defer response.Body.Close()
+	defer func() {
+		defErr := response.Body.Close()
+		if defErr != nil {
+			fmt.Printf("http response close error: %v", err)
+		}
+	}()
 
 	bytes, err := io.ReadAll(response.Body)
 	if err != nil {
