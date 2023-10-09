@@ -1,18 +1,19 @@
 package parser
 
 import (
-	"bitbucket.org/decimalteam/api_fondation/clients"
-	"bitbucket.org/decimalteam/api_fondation/pkg/parser/cosmos"
-	"bitbucket.org/decimalteam/api_fondation/worker"
 	"encoding/json"
 	"fmt"
-	"github.com/nats-io/nats.go"
-	"github.com/sirupsen/logrus"
-	"github.com/tendermint/tendermint/abci/types"
 	"io"
 	"net/http"
 	"strconv"
 	"sync"
+
+	"bitbucket.org/decimalteam/api_fondation/clients"
+	"bitbucket.org/decimalteam/api_fondation/pkg/parser/cosmos"
+	"bitbucket.org/decimalteam/api_fondation/worker"
+	"github.com/nats-io/nats.go"
+	"github.com/sirupsen/logrus"
+	"github.com/tendermint/tendermint/abci/types"
 )
 
 type BlockchainNetwork string
