@@ -258,7 +258,7 @@ func fetchBlockSize(ctx context.Context, rpcClient *rpc.HTTP, height int64, ch c
 	ch <- result.BlockMetas[0].BlockSize
 }
 
-func fetchBlockResults(ctx context.Context, rpcClient *rpc.HTTP, cdc params.EncodingConfig, height int64, block ctypes.ResultBlock, ea *events.EventAccumulator, ch chan []cosmos2.Tx, brch chan *ctypes.ResultBlockResults) {
+func fetchBlockResults(ctx context.Context, rpcClient *rpc.HTTP, cdc params.EncodingConfig, height int64, block ctypes.ResultBlock, ea *events.EventAccumulator, ch chan []cosmos.Tx, brch chan *ctypes.ResultBlockResults) {
 	var err error
 
 	// Request block results from the node
@@ -278,9 +278,9 @@ func fetchBlockResults(ctx context.Context, rpcClient *rpc.HTTP, cdc params.Enco
 	}
 
 	// Prepare block results by overall processing
-	var results []cosmos2.Tx
+	var results []cosmos.Tx
 	for i, tx := range block.Block.Txs {
-		var result cosmos2.Tx
+		var result cosmos.Tx
 		var txLog []interface{}
 		txr := blockResults.TxsResults[i]
 
