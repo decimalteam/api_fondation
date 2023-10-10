@@ -68,7 +68,9 @@ func GetEthRpcClient(config *Config) (*rpc.Client, error) {
 	return ethRpcClient, nil
 }
 
-func New(config *Config) (*Client, error) {
+func New() (*Client, error) {
+	config := GetConfig()
+
 	httpClient := &http.Client{}
 
 	web3Client, err := ethclient.Dial(config.Web3Endpoint)

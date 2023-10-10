@@ -14,7 +14,7 @@ import (
 func Parse(ctx context.Context, height int64) (*types.BlockEVM, error) {
 	web3BlockChan := make(chan *web3types.Block)
 
-	cl, err := client.New(client.GetConfig())
+	cl, err := client.New()
 	if err != nil {
 		return nil, err
 	}
