@@ -15,6 +15,7 @@ type Client struct {
 	Web3Client   *ethclient.Client
 	RpcClient    *http2.HTTP
 	EthRpcClient *rpc.Client
+	Hostname     string
 }
 
 func GetHostName() (string, error) {
