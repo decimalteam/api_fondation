@@ -32,33 +32,6 @@ func GetHttpClient() *http.Client {
 	return &http.Client{}
 }
 
-func GetWeb3Client(config *Config) (*ethclient.Client, error) {
-	web3Client, err := ethclient.Dial(config.Web3Endpoint)
-	if err != nil {
-		return nil, err
-	}
-
-	return web3Client, nil
-}
-
-func GetWeb3ChainId(web3Client *ethclient.Client) (*big.Int, error) {
-	web3ChainId, err := web3Client.ChainID(context.Background())
-	if err != nil {
-		return nil, err
-	}
-
-	return web3ChainId, nil
-}
-
-func GetRpcClient(config *Config, httpClient *http.Client) (*http2.HTTP, error) {
-	rpcClient, err := http2.NewWithClient(config.RpcEndpoint, config.RpcEndpoint, httpClient)
-	if err != nil {
-		return nil, err
-	}
-
-	return rpcClient, nil
-}
-
 func New() (*Client, error) {
 	config := GetConfig()
 
