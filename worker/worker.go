@@ -55,12 +55,7 @@ func GetBlockResult(height int64) *cosmos.Block {
 
 	cdc := encoding.MakeConfig(GetModuleBasics())
 
-	_, err := client.New()
-	if err != nil {
-		panicError(err)
-	}
-
-	rpcClient, err := client.GetRpcClient(client.GetConfig(), client.GetHttpClient())
+	cl, err := client.New()
 	if err != nil {
 		panicError(err)
 	}
@@ -76,7 +71,7 @@ func GetBlockResult(height int64) *cosmos.Block {
 	}
 
 	// Fetch requested block from Tendermint RPC
-	block := fetchBlock(ctx, rpcClient, height)
+	block := fetchBlock(ctx, cl.RpcClient, height)
 	if block == nil {
 		return nil
 	}
@@ -88,8 +83,8 @@ func GetBlockResult(height int64) *cosmos.Block {
 	sizeChan := make(chan int)
 	web3BlockChan := make(chan *web3types.Block)
 	web3ReceiptsChan := make(chan web3types.Receipts)
-	go fetchBlockResults(ctx, rpcClient, cdc, height, *block, accum, txsChan, resultsChan)
-	go fetchBlockSize(ctx, rpcClient, height, sizeChan)
+	go fetchBlockResults(ctx, cl.RpcClient, cdc, height, *block, accum, txsChan, resultsChan)
+	go fetchBlockSize(ctx, cl.RpcClient, height, sizeChan)
 	txs := <-txsChan
 	results := <-resultsChan
 	size := <-sizeChan
