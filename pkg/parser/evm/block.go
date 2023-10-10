@@ -14,23 +14,18 @@ import (
 func Parse(ctx context.Context, height int64) (*types.BlockEVM, error) {
 	web3BlockChan := make(chan *web3types.Block)
 
-	clnt, err := client.New(client.GetConfig())
+	cl, err := client.New(client.GetConfig())
 	if err != nil {
 		return nil, err
 	}
 
-	web3Client, err := client.GetWeb3Client(client.GetConfig())
-	if err != nil {
-		return nil, err
-	}
-
-	go worker.FetchBlockWeb3(ctx, clnt.Web3Client, height, web3BlockChan)
+	go worker.FetchBlockWeb3(ctx, cl.Web3Client, height, web3BlockChan)
 
 	web3Block := <-web3BlockChan
 	web3Body := web3Block.Body()
 
 	var web3ChainId *big.Int
-	web3ChainId, err = client.GetWeb3ChainId(web3Client)
+	web3ChainId, err = client.GetWeb3ChainId(cl.Web3Client)
 	if err != nil {
 		return nil, err
 	}
