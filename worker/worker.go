@@ -60,11 +60,6 @@ func GetBlockResult(height int64) *cosmos.Block {
 		panicError(err)
 	}
 
-	ethRpcClient, err := client.GetEthRpcClient(client.GetConfig())
-	if err != nil {
-		panicError(err)
-	}
-
 	// Fetch requested block from Tendermint RPC
 	block := fetchBlock(ctx, cl.RpcClient, height)
 	if block == nil {
@@ -86,7 +81,7 @@ func GetBlockResult(height int64) *cosmos.Block {
 	go FetchBlockWeb3(ctx, cl.Web3Client, height, web3BlockChan)
 
 	web3Block := <-web3BlockChan
-	go FetchBlockTxReceiptsWeb3(ethRpcClient, web3Block, web3ReceiptsChan)
+	go FetchBlockTxReceiptsWeb3(cl.EthRpcClient, web3Block, web3ReceiptsChan)
 	web3Body := web3Block.Body()
 	web3Transactions := make([]*types.TransactionEVM, len(web3Body.Transactions))
 	for i, tx := range web3Body.Transactions {
