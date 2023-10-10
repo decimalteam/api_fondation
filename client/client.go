@@ -65,3 +65,29 @@ func GetEthRpcClient(config *Config) (*rpc.Client, error) {
 
 	return ethRpcClient, nil
 }
+
+func New(config *Config) (*Client, error) {
+	httpClient := &http.Client{}
+
+	web3Client, err := ethclient.Dial(config.Web3Endpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	rpcClient, err := http2.NewWithClient(config.RpcEndpoint, config.RpcEndpoint, httpClient)
+	if err != nil {
+		return nil, err
+	}
+
+	ethRpcClient, err := rpc.Dial(config.Web3Endpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Client{
+		HttpClient:   httpClient,
+		Web3Client:   web3Client,
+		RpcClient:    rpcClient,
+		EthRpcClient: ethRpcClient,
+	}, nil
+}
