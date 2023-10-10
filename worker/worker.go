@@ -7,7 +7,7 @@ import (
 	"math/big"
 	"time"
 
-	"bitbucket.org/decimalteam/api_fondation/clients"
+	"bitbucket.org/decimalteam/api_fondation/client"
 	"bitbucket.org/decimalteam/api_fondation/events"
 	"bitbucket.org/decimalteam/api_fondation/pkg/parser/cosmos"
 	"bitbucket.org/decimalteam/api_fondation/types"
@@ -55,17 +55,17 @@ func GetBlockResult(height int64) *cosmos.Block {
 
 	cdc := encoding.MakeConfig(GetModuleBasics())
 
-	rpcClient, err := clients.GetRpcClient(clients.GetConfig(), clients.GetHttpClient())
+	rpcClient, err := client.GetRpcClient(client.GetConfig(), client.GetHttpClient())
 	if err != nil {
 		panicError(err)
 	}
 
-	web3Client, err := clients.GetWeb3Client(clients.GetConfig())
+	web3Client, err := client.GetWeb3Client(client.GetConfig())
 	if err != nil {
 		panicError(err)
 	}
 
-	ethRpcClient, err := clients.GetEthRpcClient(clients.GetConfig())
+	ethRpcClient, err := client.GetEthRpcClient(client.GetConfig())
 	if err != nil {
 		panicError(err)
 	}
@@ -95,12 +95,12 @@ func GetBlockResult(height int64) *cosmos.Block {
 	web3Body := web3Block.Body()
 	web3Transactions := make([]*types.TransactionEVM, len(web3Body.Transactions))
 	for i, tx := range web3Body.Transactions {
-		web3Client, err = clients.GetWeb3Client(clients.GetConfig())
+		web3Client, err = client.GetWeb3Client(client.GetConfig())
 		if err != nil {
 			panicError(err)
 		}
 
-		web3ChainId, err := clients.GetWeb3ChainId(web3Client)
+		web3ChainId, err := client.GetWeb3ChainId(web3Client)
 		if err != nil {
 			panicError(err)
 		}

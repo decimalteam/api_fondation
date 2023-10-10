@@ -5,7 +5,7 @@ import (
 	"context"
 	"math/big"
 
-	"bitbucket.org/decimalteam/api_fondation/clients"
+	"bitbucket.org/decimalteam/api_fondation/client"
 	"bitbucket.org/decimalteam/api_fondation/worker"
 	web3hexutil "github.com/ethereum/go-ethereum/common/hexutil"
 	web3types "github.com/ethereum/go-ethereum/core/types"
@@ -14,7 +14,7 @@ import (
 func Parse(ctx context.Context, height int64) (*types.BlockEVM, error) {
 	web3BlockChan := make(chan *web3types.Block)
 
-	web3Client, err := clients.GetWeb3Client(clients.GetConfig())
+	web3Client, err := client.GetWeb3Client(client.GetConfig())
 	if err != nil {
 		return nil, err
 	}
@@ -25,7 +25,7 @@ func Parse(ctx context.Context, height int64) (*types.BlockEVM, error) {
 	web3Body := web3Block.Body()
 
 	var web3ChainId *big.Int
-	web3ChainId, err = clients.GetWeb3ChainId(web3Client)
+	web3ChainId, err = client.GetWeb3ChainId(web3Client)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +36,7 @@ func Parse(ctx context.Context, height int64) (*types.BlockEVM, error) {
 		return nil, err
 	}
 
-	ethRpcClient, err := clients.GetEthRpcClient(clients.GetConfig())
+	ethRpcClient, err := client.GetEthRpcClient(client.GetConfig())
 	if err != nil {
 		return nil, err
 	}

@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"bitbucket.org/decimalteam/api_fondation/clients"
+	"bitbucket.org/decimalteam/api_fondation/client"
 	"bitbucket.org/decimalteam/api_fondation/pkg/parser/cosmos"
 	"bitbucket.org/decimalteam/api_fondation/worker"
 	"fmt"
@@ -26,15 +26,15 @@ func getBlockFromIndexer(indexerNode string) (*cosmos.Block, error) {
 		return res, err
 	}
 
-	hostname, err := clients.GetHostName()
+	hostname, err := client.GetHostName()
 	if err != nil {
 		fmt.Printf("get hostname error: %v", err)
 		return res, err
 	}
 	req.Header.Set("X-Worker", hostname)
 
-	clients.GetHttpClient()
-	resp, err := clients.GetHttpClient().Do(req)
+	client.GetHttpClient()
+	resp, err := client.GetHttpClient().Do(req)
 	if err != nil {
 		fmt.Printf("get block from indexer error: %v", err)
 		return res, err
