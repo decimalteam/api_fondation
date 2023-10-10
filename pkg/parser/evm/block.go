@@ -24,14 +24,8 @@ func Parse(ctx context.Context, height int64) (*types.BlockEVM, error) {
 	web3Block := <-web3BlockChan
 	web3Body := web3Block.Body()
 
-	var web3ChainId *big.Int
-	web3ChainId, err = client.GetWeb3ChainId(cl.Web3Client)
-	if err != nil {
-		return nil, err
-	}
-
 	var web3Transactions []*types.TransactionEVM
-	web3Transactions, err = getWeb3Transactions(web3Body, web3ChainId, web3Block)
+	web3Transactions, err = getWeb3Transactions(web3Body, cl.Web3ChainId, web3Block)
 	if err != nil {
 		return nil, err
 	}
