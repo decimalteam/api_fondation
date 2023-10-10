@@ -15,6 +15,7 @@ type Client struct {
 	Web3Client   *ethclient.Client
 	RpcClient    *http2.HTTP
 	EthRpcClient *rpc.Client
+	Web3ChainId  *big.Int
 	Hostname     string
 }
 
@@ -85,6 +86,11 @@ func New(config *Config) (*Client, error) {
 		return nil, err
 	}
 
+	web3ChainId, err := web3Client.ChainID(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
 	var hostname string
 	hostname, err = os.Hostname()
 	if err != nil {
@@ -96,6 +102,7 @@ func New(config *Config) (*Client, error) {
 		Web3Client:   web3Client,
 		RpcClient:    rpcClient,
 		EthRpcClient: ethRpcClient,
+		Web3ChainId:  web3ChainId,
 		Hostname:     hostname,
 	}, nil
 }
