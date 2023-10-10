@@ -10,6 +10,13 @@ import (
 	"os"
 )
 
+type Client struct {
+	HttpClient   *http.Client
+	Web3Client   *ethclient.Client
+	RpcClient    *http2.HTTP
+	EthRpcClient *rpc.Client
+}
+
 func GetHostName() (string, error) {
 	hostname, err := os.Hostname()
 	if err != nil {
