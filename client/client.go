@@ -85,10 +85,17 @@ func New(config *Config) (*Client, error) {
 		return nil, err
 	}
 
+	var hostname string
+	hostname, err = os.Hostname()
+	if err != nil {
+		return nil, err
+	}
+
 	return &Client{
 		HttpClient:   httpClient,
 		Web3Client:   web3Client,
 		RpcClient:    rpcClient,
 		EthRpcClient: ethRpcClient,
+		Hostname:     hostname,
 	}, nil
 }
