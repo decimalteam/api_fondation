@@ -60,11 +60,6 @@ func GetBlockResult(height int64) *cosmos.Block {
 		panicError(err)
 	}
 
-	web3Client, err := client.GetWeb3Client(client.GetConfig())
-	if err != nil {
-		panicError(err)
-	}
-
 	ethRpcClient, err := client.GetEthRpcClient(client.GetConfig())
 	if err != nil {
 		panicError(err)
@@ -95,17 +90,7 @@ func GetBlockResult(height int64) *cosmos.Block {
 	web3Body := web3Block.Body()
 	web3Transactions := make([]*types.TransactionEVM, len(web3Body.Transactions))
 	for i, tx := range web3Body.Transactions {
-		web3Client, err = client.GetWeb3Client(client.GetConfig())
-		if err != nil {
-			panicError(err)
-		}
-
-		web3ChainId, err := client.GetWeb3ChainId(web3Client)
-		if err != nil {
-			panicError(err)
-		}
-
-		msg, err := tx.AsMessage(web3types.NewLondonSigner(web3ChainId), nil)
+		msg, err := tx.AsMessage(web3types.NewLondonSigner(cl.Web3ChainId), nil)
 		panicError(err)
 		web3Transactions[i] = &types.TransactionEVM{
 			Type:             web3hexutil.Uint64(tx.Type()),
