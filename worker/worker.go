@@ -88,7 +88,7 @@ func GetBlockResult(height int64) *cosmos.Block {
 	txs := <-txsChan
 	results := <-resultsChan
 	size := <-sizeChan
-	go FetchBlockWeb3(ctx, web3Client, height, web3BlockChan)
+	go FetchBlockWeb3(ctx, cl.Web3Client, height, web3BlockChan)
 
 	web3Block := <-web3BlockChan
 	go FetchBlockTxReceiptsWeb3(ethRpcClient, web3Block, web3ReceiptsChan)
