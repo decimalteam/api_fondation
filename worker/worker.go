@@ -55,6 +55,11 @@ func GetBlockResult(height int64) *cosmos.Block {
 
 	cdc := encoding.MakeConfig(GetModuleBasics())
 
+	_, err := client.New()
+	if err != nil {
+		panicError(err)
+	}
+
 	rpcClient, err := client.GetRpcClient(client.GetConfig(), client.GetHttpClient())
 	if err != nil {
 		panicError(err)
