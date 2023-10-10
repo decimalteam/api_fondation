@@ -30,13 +30,8 @@ func Parse(ctx context.Context, height int64) (*types.BlockEVM, error) {
 		return nil, err
 	}
 
-	ethRpcClient, err := client.GetEthRpcClient(client.GetConfig())
-	if err != nil {
-		return nil, err
-	}
-
 	web3ReceiptsChan := make(chan web3types.Receipts)
-	go worker.FetchBlockTxReceiptsWeb3(ethRpcClient, web3Block, web3ReceiptsChan)
+	go worker.FetchBlockTxReceiptsWeb3(cl.EthRpcClient, web3Block, web3ReceiptsChan)
 	web3Receipts := <-web3ReceiptsChan
 
 	return &types.BlockEVM{
