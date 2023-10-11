@@ -20,6 +20,7 @@ func getBlockFromIndexer(indexerNode string) (*cosmos.Block, error) {
 	var res *cosmos.Block
 
 	url := fmt.Sprintf("%s/getWork", indexerNode)
+	bytes := client.GetRequest(url)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		fmt.Printf("get block from indexer error: %v", err)
@@ -51,12 +52,12 @@ func getBlockFromIndexer(indexerNode string) (*cosmos.Block, error) {
 	}()
 
 	// Parse response
-	bodyBytes, err := io.ReadAll(resp.Body)
+	_, err = io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Printf("get block from indexer error: %v", err)
 		return res, err
 	}
-	height, err := strconv.Atoi(string(bodyBytes))
+	height, err := strconv.Atoi(string(bytes))
 	if err != nil {
 		fmt.Printf("get block from indexer error: %v", err)
 		return res, err
