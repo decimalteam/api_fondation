@@ -6,7 +6,7 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-func getRequest() {
+func getRequest() []byte {
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
 	req.SetRequestURI("https://httpbin.org/json")
@@ -21,28 +21,32 @@ func getRequest() {
 	err := fasthttp.Do(req, resp)
 	if err != nil {
 		fmt.Printf("Client get failed: %s\n", err)
-		return
+		return nil
 	}
 	if resp.StatusCode() != fasthttp.StatusOK {
 		fmt.Printf("Expected status code %d but got %d\n", fasthttp.StatusOK, resp.StatusCode())
-		return
+		return nil
 	}
 
 	// Verify the content type
 	contentType := resp.Header.Peek("Content-Type")
 	if bytes.Index(contentType, []byte("application/json")) != 0 {
 		fmt.Printf("Expected content type application/json but got %s\n", contentType)
-		return
+		return nil
 	}
 
 	// Do we need to decompress the response?
 	contentEncoding := resp.Header.Peek("Content-Encoding")
-	var _ []byte
+	var res []byte
 	if bytes.EqualFold(contentEncoding, []byte("gzip")) {
 		fmt.Println("Unzipping...")
-		_, _ = resp.BodyGunzip()
+		res, err = resp.BodyGunzip()
+		if err != nil {
+			fmt.Printf("gunzip response body failed: %s\n", err)
+		}
 	} else {
-		_ = resp.Body()
+		res = resp.Body()
 	}
 
+	return res
 }
