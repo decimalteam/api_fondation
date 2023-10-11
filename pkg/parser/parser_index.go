@@ -38,7 +38,7 @@ func getBlockFromIndexer(indexerNode string) (*cosmos.Block, error) {
 	}
 	req.Header.Set("X-Worker", cl.Hostname)
 
-	resp, err := client.GetHttpClient().Do(req)
+	resp, err := cl.HttpClient.Do(req)
 	if err != nil {
 		fmt.Printf("get block from indexer error: %v", err)
 		return res, err
