@@ -132,7 +132,6 @@ func getBlockFromDataSource(address string) (*cosmos.Block, error) {
 	}
 	req.Header.Set("X-Worker", cl.Hostname)
 
-	client.GetHttpClient()
 	resp, err := client.GetHttpClient().Do(req)
 	if err != nil {
 		fmt.Printf("get block from indexer error: %v", err)
