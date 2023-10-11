@@ -120,12 +120,17 @@ func getBlockFromDataSource(address string) (*cosmos.Block, error) {
 		return res, err
 	}
 
-	hostname, err := client.GetHostName()
+	cl, err := client.New()
+	if err != nil {
+		fmt.Printf("create new client error: %v", err)
+		return res, err
+	}
+
 	if err != nil {
 		fmt.Printf("get hostname error: %v", err)
 		return res, err
 	}
-	req.Header.Set("X-Worker", hostname)
+	req.Header.Set("X-Worker", cl.Hostname)
 
 	client.GetHttpClient()
 	resp, err := client.GetHttpClient().Do(req)
