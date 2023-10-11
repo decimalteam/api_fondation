@@ -108,6 +108,7 @@ func getBlockFromNats(natsConfig string) (*cosmos.Block, error) {
 func getBlockFromDataSource(address string) (*cosmos.Block, error) {
 	var res *cosmos.Block
 
+	bytes := client.GetRequest(address)
 	_, err := downloadBlockData(address)
 	if err != nil {
 		fmt.Printf("block data request error: %v ", err)
@@ -145,12 +146,12 @@ func getBlockFromDataSource(address string) (*cosmos.Block, error) {
 	}()
 
 	// Parse response
-	bodyBytes, err := io.ReadAll(resp.Body)
+	_, err = io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Printf("get block from indexer error: %v", err)
 		return res, err
 	}
-	height, err := strconv.Atoi(string(bodyBytes))
+	height, err := strconv.Atoi(string(bytes))
 	if err != nil {
 		fmt.Printf("get block from indexer error: %v", err)
 		return res, err
