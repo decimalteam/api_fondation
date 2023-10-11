@@ -19,10 +19,6 @@ type Client struct {
 	Hostname     string
 }
 
-func GetHttpClient() *http.Client {
-	return &http.Client{}
-}
-
 func New() (*Client, error) {
 	config := GetConfig()
 
