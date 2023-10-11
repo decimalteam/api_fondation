@@ -6,10 +6,10 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-func getRequest() []byte {
+func GetRequest(requestURI string) []byte {
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
-	req.SetRequestURI("https://httpbin.org/json")
+	req.SetRequestURI(requestURI)
 	// fasthttp does not automatically request a gzipped response.
 	// We must explicitly ask for it.
 	req.Header.Set("Accept-Encoding", "gzip")
