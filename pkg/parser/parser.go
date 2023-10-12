@@ -3,8 +3,6 @@ package parser
 import (
 	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"strconv"
 	"sync"
 
@@ -13,7 +11,6 @@ import (
 	"bitbucket.org/decimalteam/api_fondation/worker"
 	"github.com/nats-io/nats.go"
 	"github.com/sirupsen/logrus"
-	"github.com/tendermint/tendermint/abci/types"
 )
 
 type BlockchainNetwork string
@@ -115,39 +112,4 @@ func getBlockFromDataSource(address string) (*cosmos.Block, error) {
 	res = worker.GetBlockResult(int64(height))
 
 	return res, nil
-}
-
-func downloadBlockData(path string) (*types.Response, error) {
-	request, err := http.NewRequest(http.MethodGet, path, nil)
-	if err != nil {
-		return nil, fmt.Errorf("get request error: %s", err)
-	}
-
-	request.Header = http.Header{
-		"Content-type": {"application/json"},
-	}
-
-	response, err := http.DefaultClient.Do(request)
-	if err != nil {
-		return nil, fmt.Errorf("get request error: %s", err)
-	}
-	defer func() {
-		defErr := response.Body.Close()
-		if defErr != nil {
-			fmt.Printf("http response close error: %v", err)
-		}
-	}()
-
-	bytes, err := io.ReadAll(response.Body)
-	if err != nil {
-		return nil, fmt.Errorf("read response body error: %s", err)
-	}
-
-	var result types.Response
-	err = json.Unmarshal(bytes, &result)
-	if err != nil {
-		return nil, err
-	}
-
-	return &result, nil
 }
