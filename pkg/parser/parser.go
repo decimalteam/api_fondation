@@ -54,24 +54,24 @@ func NewParser(interval int, currNet BlockchainNetwork, indexNode, parseServiceH
 	}
 }
 
-func (p *Parser) NewBlock(ch chan *cosmos.Block) {
+func (p *Parser) NewBlock(ch chan *BlockData) {
 	indexNodeBlock, err := getBlockFromIndexer(p.IndexNode)
 	if err != nil {
 		return
 	}
 	ch <- indexNodeBlock
 
-	parseServiceBlock, err := getBlockFromDataSource(p.ParseServiceHost)
+	parseServiceBlockData, err := getBlockFromDataSource(p.ParseServiceHost)
 	if err != nil {
 		return
 	}
-	ch <- parseServiceBlock
+	ch <- parseServiceBlockData
 
-	natsBlock, err := getBlockFromNats(p.NatsConfig)
+	natsBlockData, err := getBlockFromNats(p.NatsConfig)
 	if err != nil {
 		return
 	}
-	ch <- natsBlock
+	ch <- natsBlockData
 }
 
 func getBlockFromNats(natsConfig string) (*cosmos.Block, error) {
