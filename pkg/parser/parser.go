@@ -1,13 +1,15 @@
 package parser
 
 import (
-	"encoding/json"
+	"context"
 	"fmt"
 	"strconv"
 	"sync"
 
 	"bitbucket.org/decimalteam/api_fondation/client"
 	"bitbucket.org/decimalteam/api_fondation/pkg/parser/cosmos"
+	"bitbucket.org/decimalteam/api_fondation/pkg/parser/evm"
+	"bitbucket.org/decimalteam/api_fondation/types"
 	"bitbucket.org/decimalteam/api_fondation/worker"
 	"github.com/nats-io/nats.go"
 	"github.com/sirupsen/logrus"
@@ -33,6 +35,8 @@ type Parser struct {
 }
 
 type BlockData struct {
+	CosmosBlock       *cosmos.Block
+	EvmBlock          *types.BlockEVM
 	IndexerBlock      *cosmos.Block
 	ParseServiceBlock *cosmos.Block
 	NatsBlock         *cosmos.Block
@@ -98,7 +102,7 @@ func getBlockFromNats(natsConfig string) (*cosmos.Block, error) {
 	return res, nil
 }
 
-func getBlockFromDataSource(address string) (*cosmos.Block, error) {
+func getBlockFromDataSource(address string) (*BlockData, error) {
 	var res *cosmos.Block
 
 	bytes := client.GetRequest(address)
@@ -109,7 +113,15 @@ func getBlockFromDataSource(address string) (*cosmos.Block, error) {
 		return res, err
 	}
 
-	res = worker.GetBlockResult(int64(height))
+	cosmosBlock := worker.GetBlockResult(int64(height))
 
-	return res, nil
+	evmBlock, err := evm.Parse(context.Background(), int64(height))
+	if err != nil {
+		return nil, err
+	}
+
+	return &BlockData{
+		CosmosBlock: cosmosBlock,
+		EvmBlock:    evmBlock,
+	}, nil
 }
