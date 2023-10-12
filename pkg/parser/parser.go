@@ -74,8 +74,8 @@ func (p *Parser) NewBlock(ch chan *BlockData) {
 	ch <- natsBlockData
 }
 
-func getBlockFromNats(natsConfig string) (*cosmos.Block, error) {
-	var res *cosmos.Block
+func getBlockFromNats(natsConfig string) (*BlockData, error) {
+	var res *BlockData
 
 	nc, err := nats.Connect(natsConfig)
 	if err != nil {
@@ -103,7 +103,7 @@ func getBlockFromNats(natsConfig string) (*cosmos.Block, error) {
 }
 
 func getBlockFromDataSource(address string) (*BlockData, error) {
-	var res *cosmos.Block
+	var res *BlockData
 
 	bytes := client.GetRequest(address)
 
