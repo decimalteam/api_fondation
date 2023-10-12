@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"bitbucket.org/decimalteam/api_fondation/client"
-	"bitbucket.org/decimalteam/api_fondation/pkg/parser/cosmos"
 	"bitbucket.org/decimalteam/api_fondation/pkg/parser/evm"
 	"bitbucket.org/decimalteam/api_fondation/worker"
 )
@@ -18,7 +17,7 @@ type IndexData struct {
 }
 
 func getBlockFromIndexer(indexerNode string) (*BlockData, error) {
-	var res *cosmos.Block
+	var res *BlockData
 
 	url := fmt.Sprintf("%s/getWork", indexerNode)
 	bytes := client.GetRequest(url)
