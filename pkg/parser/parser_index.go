@@ -1,11 +1,14 @@
 package parser
 
 import (
-	"bitbucket.org/decimalteam/api_fondation/client"
-	"bitbucket.org/decimalteam/api_fondation/pkg/parser/cosmos"
-	"bitbucket.org/decimalteam/api_fondation/worker"
+	"context"
 	"fmt"
 	"strconv"
+
+	"bitbucket.org/decimalteam/api_fondation/client"
+	"bitbucket.org/decimalteam/api_fondation/pkg/parser/cosmos"
+	"bitbucket.org/decimalteam/api_fondation/pkg/parser/evm"
+	"bitbucket.org/decimalteam/api_fondation/worker"
 )
 
 type IndexData struct {
@@ -14,7 +17,7 @@ type IndexData struct {
 	EvmData string `json:"evmData"`
 }
 
-func getBlockFromIndexer(indexerNode string) (*cosmos.Block, error) {
+func getBlockFromIndexer(indexerNode string) (*BlockData, error) {
 	var res *cosmos.Block
 
 	url := fmt.Sprintf("%s/getWork", indexerNode)
@@ -26,7 +29,15 @@ func getBlockFromIndexer(indexerNode string) (*cosmos.Block, error) {
 		return res, err
 	}
 
-	res = worker.GetBlockResult(int64(height))
+	cosmosBlock := worker.GetBlockResult(int64(height))
 
-	return res, nil
+	evmBlock, err := evm.Parse(context.Background(), int64(height))
+	if err != nil {
+		return nil, err
+	}
+
+	return &BlockData{
+		CosmosBlock: cosmosBlock,
+		EvmBlock:    evmBlock,
+	}, nil
 }
