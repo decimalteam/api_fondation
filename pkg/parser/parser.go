@@ -1,16 +1,11 @@
 package parser
 
 import (
-	"context"
 	"fmt"
-	"strconv"
 	"sync"
 
-	"bitbucket.org/decimalteam/api_fondation/client"
 	"bitbucket.org/decimalteam/api_fondation/pkg/parser/cosmos"
-	"bitbucket.org/decimalteam/api_fondation/pkg/parser/evm"
 	"bitbucket.org/decimalteam/api_fondation/types"
-	"bitbucket.org/decimalteam/api_fondation/worker"
 	"github.com/nats-io/nats.go"
 	"github.com/sirupsen/logrus"
 )
@@ -32,6 +27,7 @@ type Parser struct {
 	ParseServiceHost string
 	NatsConfig       string
 	Logger           *logrus.Logger
+	ChanelNewBlock   chan *BlockData
 }
 
 type BlockData struct {
@@ -48,27 +44,33 @@ func NewParser(interval int, currNet BlockchainNetwork, indexNode, parseServiceH
 		ParseServiceHost: parseServiceHost,
 		NatsConfig:       natsConfig,
 		Logger:           logger,
+		ChanelNewBlock:   nil,
 	}
 }
 
-func (p *Parser) NewBlock(ch chan *BlockData) {
-	indexNodeBlock, err := getBlockFromIndexer(p.IndexNode)
+func (p *Parser) NewBlock(height int64) {
+	_, err := p.getBlockFromNetwork(height)
 	if err != nil {
 		return
 	}
-	ch <- indexNodeBlock
 
-	parseServiceBlockData, err := getBlockFromDataSource(p.ParseServiceHost)
-	if err != nil {
-		return
-	}
-	ch <- parseServiceBlockData
+	//indexNodeBlock, err := getBlockFromIndexer(p.IndexNode)
+	//if err != nil {
+	//	return
+	//}
+	//ch <- indexNodeBlock
 
-	natsBlockData, err := getBlockFromNats(p.NatsConfig)
-	if err != nil {
-		return
-	}
-	ch <- natsBlockData
+	//parseServiceBlockData, err := getBlockFromDataSource(p.ParseServiceHost)
+	//if err != nil {
+	//	return
+	//}
+	//ch <- parseServiceBlockData
+	//
+	//natsBlockData, err := getBlockFromNats(p.NatsConfig)
+	//if err != nil {
+	//	return
+	//}
+	//ch <- natsBlockData
 }
 
 func getBlockFromNats(natsConfig string) (*BlockData, error) {
@@ -99,26 +101,18 @@ func getBlockFromNats(natsConfig string) (*BlockData, error) {
 	return res, nil
 }
 
-func getBlockFromDataSource(address string) (*BlockData, error) {
-	var res *BlockData
-
-	bytes := client.GetRequest(address)
-
-	height, err := strconv.Atoi(string(bytes))
-	if err != nil {
-		fmt.Printf("get block from indexer error: %v", err)
-		return res, err
-	}
-
-	cosmosBlock := worker.GetBlockResult(int64(height))
-
-	evmBlock, err := evm.Parse(context.Background(), int64(height))
-	if err != nil {
-		return nil, err
-	}
-
-	return &BlockData{
-		CosmosBlock: cosmosBlock,
-		EvmBlock:    evmBlock,
-	}, nil
-}
+//func getBlockFromDataSource(address string) (*BlockData, error) {
+//	var res *BlockData
+//
+//	cosmosBlock := worker.GetBlockResult(int64(height))
+//
+//	evmBlock, err := evm.Parse(context.Background(), int64(height))
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	return &BlockData{
+//		CosmosBlock: cosmosBlock,
+//		EvmBlock:    evmBlock,
+//	}, nil
+//}

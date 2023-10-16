@@ -7,7 +7,6 @@ import (
 	http2 "github.com/tendermint/tendermint/rpc/client/http"
 	"math/big"
 	"net/http"
-	"os"
 )
 
 type Client struct {
@@ -16,7 +15,6 @@ type Client struct {
 	RpcClient    *http2.HTTP
 	EthRpcClient *rpc.Client
 	Web3ChainId  *big.Int
-	Hostname     string
 }
 
 func New() (*Client, error) {
@@ -44,18 +42,11 @@ func New() (*Client, error) {
 		return nil, err
 	}
 
-	var hostname string
-	hostname, err = os.Hostname()
-	if err != nil {
-		return nil, err
-	}
-
 	return &Client{
 		HttpClient:   httpClient,
 		Web3Client:   web3Client,
 		RpcClient:    rpcClient,
 		EthRpcClient: ethRpcClient,
 		Web3ChainId:  web3ChainId,
-		Hostname:     hostname,
 	}, nil
 }

@@ -16,7 +16,7 @@ type IndexData struct {
 	EvmData string `json:"evmData"`
 }
 
-func getBlockFromIndexer(indexerNode string) (*BlockData, error) {
+func (p *Parser) getBlockFromIndexer(indexerNode string) (*BlockData, error) {
 	var res *BlockData
 
 	url := fmt.Sprintf("%s/getWork", indexerNode)
