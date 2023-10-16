@@ -49,7 +49,7 @@ func NewParser(interval int, currNet BlockchainNetwork, indexNode, parseServiceH
 }
 
 func (p *Parser) NewBlock(height int64) {
-	_, err := p.getBlockFromNetwork(height)
+	err := p.getBlockFromNetwork(height)
 	if err != nil {
 		return
 	}
