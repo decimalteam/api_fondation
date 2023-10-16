@@ -1,7 +1,6 @@
 package worker
 
 import (
-	"bitbucket.org/decimalteam/api_fondation/pkg/parser"
 	"bitbucket.org/decimalteam/api_fondation/pkg/parser/evm"
 	"context"
 	"encoding/json"
@@ -17,17 +16,6 @@ import (
 	web3 "github.com/ethereum/go-ethereum/ethclient"
 	"github.com/evmos/ethermint/encoding"
 	rpc "github.com/tendermint/tendermint/rpc/client/http"
-
-	//evmtypes "github.com/evmos/ethermint/x/evm/types"
-
-	// Decimal modules
-
-	//cointypes "bitbucket.org/decimalteam/go-smart-node/x/coin/types"
-	//feetypes "bitbucket.org/decimalteam/go-smart-node/x/fee/types"
-	//legacytypes "bitbucket.org/decimalteam/go-smart-node/x/legacy/types"
-	//nfttypes "bitbucket.org/decimalteam/go-smart-node/x/nft/types"
-	//swaptypes "bitbucket.org/decimalteam/go-smart-node/x/swap/types"
-	//validatortypes "bitbucket.org/decimalteam/go-smart-node/x/validator/types"
 
 	"github.com/dustin/go-humanize"
 	"github.com/status-im/keycard-go/hexutils"
@@ -48,7 +36,7 @@ type ParseTask struct {
 	txNum  int
 }
 
-func GetBlockResult(height int64) *parser.BlockData {
+func GetBlockResult(height int64) *types.BlockData {
 	ctx := context.Background()
 
 	accum := events.NewEventAccumulator()
@@ -176,7 +164,7 @@ func GetBlockResult(height int64) *parser.BlockData {
 	web3Receipts := <-web3ReceiptsChan
 
 	// Create and fill Block object and then marshal to JSON
-	return &parser.BlockData{
+	return &types.BlockData{
 		CosmosBlock: &cosmos.Block{
 			ID:       cosmos.BlockId{Hash: block.BlockID.Hash.String()},
 			Evidence: block.Block.Evidence,
