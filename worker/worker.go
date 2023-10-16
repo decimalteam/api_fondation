@@ -1,6 +1,8 @@
 package worker
 
 import (
+	"bitbucket.org/decimalteam/api_fondation/pkg/parser"
+	"bitbucket.org/decimalteam/api_fondation/pkg/parser/evm"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -46,7 +48,7 @@ type ParseTask struct {
 	txNum  int
 }
 
-func GetBlockResult(height int64) *cosmos.Block {
+func GetBlockResult(height int64) *parser.BlockData {
 	ctx := context.Background()
 
 	accum := events.NewEventAccumulator()
@@ -83,11 +85,11 @@ func GetBlockResult(height int64) *cosmos.Block {
 	web3Block := <-web3BlockChan
 	go FetchBlockTxReceiptsWeb3(cl.EthRpcClient, web3Block, web3ReceiptsChan)
 	web3Body := web3Block.Body()
-	web3Transactions := make([]*types.TransactionEVM, len(web3Body.Transactions))
+	web3Transactions := make([]*evm.TransactionEVM, len(web3Body.Transactions))
 	for i, tx := range web3Body.Transactions {
 		msg, err := tx.AsMessage(web3types.NewLondonSigner(cl.Web3ChainId), nil)
 		panicError(err)
-		web3Transactions[i] = &types.TransactionEVM{
+		web3Transactions[i] = &evm.TransactionEVM{
 			Type:             web3hexutil.Uint64(tx.Type()),
 			Hash:             tx.Hash(),
 			Nonce:            web3hexutil.Uint64(tx.Nonce()),
@@ -171,22 +173,32 @@ func GetBlockResult(height int64) *cosmos.Block {
 		"end-block-events", len(results.EndBlockEvents),
 	)
 
+	web3Receipts := <-web3ReceiptsChan
+
 	// Create and fill Block object and then marshal to JSON
-	return &cosmos.Block{
-		ID:       cosmos.BlockId{Hash: block.BlockID.Hash.String()},
-		Evidence: block.Block.Evidence,
-		Header: cosmos.Header{
-			Time:   block.Block.Time.String(),
-			Height: int(block.Block.Height),
+	return &parser.BlockData{
+		CosmosBlock: &cosmos.Block{
+			ID:       cosmos.BlockId{Hash: block.BlockID.Hash.String()},
+			Evidence: block.Block.Evidence,
+			Header: cosmos.Header{
+				Time:   block.Block.Time.String(),
+				Height: int(block.Block.Height),
+			},
+			LastCommit:        block.Block.LastCommit,
+			Data:              cosmos.BlockTx{Txs: txs},
+			Emission:          emission,
+			Rewards:           rewards,
+			CommissionRewards: commissionRewards,
+			EndBlockEvents:    parseEvents(results.EndBlockEvents),
+			BeginBlockEvents:  parseEvents(results.BeginBlockEvents),
+			Size:              size,
 		},
-		LastCommit:        block.Block.LastCommit,
-		Data:              cosmos.BlockTx{Txs: txs},
-		Emission:          emission,
-		Rewards:           rewards,
-		CommissionRewards: commissionRewards,
-		EndBlockEvents:    parseEvents(results.EndBlockEvents),
-		BeginBlockEvents:  parseEvents(results.BeginBlockEvents),
-		Size:              size,
+		EvmBlock: &evm.BlockEVM{
+			Header:       web3Block.Header(),
+			Transactions: web3Transactions,
+			Uncles:       web3Body.Uncles,
+			Receipts:     web3Receipts,
+		},
 	}
 }
 
@@ -270,7 +282,7 @@ func fetchBlockResults(ctx context.Context, rpcClient *rpc.HTTP, cdc params.Enco
 		// Parse transaction results logs
 		err = json.Unmarshal([]byte(txr.Log), &txLog)
 		if err != nil {
-			result.Log = []interface{}{types.FailedTxLog{Log: txr.Log}}
+			result.Log = []interface{}{cosmos.FailedTxLog{Log: txr.Log}}
 		} else {
 			result.Log = txLog
 		}
