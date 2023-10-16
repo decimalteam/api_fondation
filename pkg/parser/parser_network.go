@@ -21,7 +21,7 @@ func (p *Parser) getBlockFromNetwork(height int64) error {
 		return err
 	}
 
-	p.ChanelNewBlock <- &BlockData{
+	p.ChanelNewBlock = &BlockData{
 		CosmosBlock: cosmosBlock,
 		EvmBlock:    evmBlock,
 	}

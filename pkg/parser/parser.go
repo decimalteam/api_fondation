@@ -27,7 +27,7 @@ type Parser struct {
 	ParseServiceHost string
 	NatsConfig       string
 	Logger           *logrus.Logger
-	ChanelNewBlock   chan *BlockData
+	ChanelNewBlock   *BlockData
 }
 
 type BlockData struct {
