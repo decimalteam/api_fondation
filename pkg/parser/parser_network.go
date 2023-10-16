@@ -12,17 +12,18 @@ type NetworkData struct {
 	EvmData string `json:"evmData"`
 }
 
-func (p *Parser) getBlockFromNetwork(height int64) (*BlockData, error) {
+func (p *Parser) getBlockFromNetwork(height int64) error {
 
 	cosmosBlock := worker.GetBlockResult(height)
 
 	evmBlock, err := evm.Parse(context.Background(), height)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return &BlockData{
+	p.ChanelNewBlock <- &BlockData{
 		CosmosBlock: cosmosBlock,
 		EvmBlock:    evmBlock,
-	}, nil
+	}
+	return nil
 }
