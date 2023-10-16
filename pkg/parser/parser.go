@@ -1,11 +1,10 @@
 package parser
 
 import (
-	"bitbucket.org/decimalteam/api_fondation/pkg/parser/evm"
+	"bitbucket.org/decimalteam/api_fondation/types"
 	"fmt"
 	"sync"
 
-	"bitbucket.org/decimalteam/api_fondation/pkg/parser/cosmos"
 	"github.com/nats-io/nats.go"
 	"github.com/sirupsen/logrus"
 )
@@ -27,12 +26,7 @@ type Parser struct {
 	ParseServiceHost string
 	NatsConfig       string
 	Logger           *logrus.Logger
-	ChanelNewBlock   *BlockData
-}
-
-type BlockData struct {
-	CosmosBlock *cosmos.Block
-	EvmBlock    *evm.BlockEVM
+	ChanelNewBlock   *types.BlockData
 }
 
 func NewParser(interval int, currNet BlockchainNetwork, indexNode, parseServiceHost, natsConfig string, logger *logrus.Logger) *Parser {
@@ -70,8 +64,8 @@ func (p *Parser) NewBlock(height int64) {
 	//ch <- natsBlockData
 }
 
-func getBlockFromNats(natsConfig string) (*BlockData, error) {
-	var res *BlockData
+func getBlockFromNats(natsConfig string) (*types.BlockData, error) {
+	var res *types.BlockData
 
 	nc, err := nats.Connect(natsConfig)
 	if err != nil {
