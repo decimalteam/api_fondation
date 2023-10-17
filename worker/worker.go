@@ -31,17 +31,17 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-type ParseTask struct {
-	height int64
-	txNum  int
-}
-
 func GetBlockResult(height int64) *types.BlockData {
 	ctx := context.Background()
 
 	accum := events.NewEventAccumulator()
 
-	fmt.Printf("Retrieving block results...", "block", height)
+	// Setup config
+	config := sdk.GetConfig()
+	SetBech32Prefixes(config)
+	SetBip44CoinType(config)
+	RegisterBaseDenom()
+	config.Seal()
 
 	cdc := encoding.MakeConfig(GetModuleBasics())
 
