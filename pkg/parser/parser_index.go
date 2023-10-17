@@ -1,12 +1,11 @@
 package parser
 
 import (
-	"context"
+	"bitbucket.org/decimalteam/api_fondation/types"
 	"fmt"
 	"strconv"
 
 	"bitbucket.org/decimalteam/api_fondation/client"
-	"bitbucket.org/decimalteam/api_fondation/pkg/parser/evm"
 	"bitbucket.org/decimalteam/api_fondation/worker"
 )
 
@@ -16,8 +15,8 @@ type IndexData struct {
 	EvmData string `json:"evmData"`
 }
 
-func (p *Parser) getBlockFromIndexer(indexerNode string) (*BlockData, error) {
-	var res *BlockData
+func (p *Parser) getBlockFromIndexer(indexerNode string) (*types.BlockData, error) {
+	var res *types.BlockData
 
 	url := fmt.Sprintf("%s/getWork", indexerNode)
 	bytes := client.GetRequest(url)
@@ -28,15 +27,5 @@ func (p *Parser) getBlockFromIndexer(indexerNode string) (*BlockData, error) {
 		return res, err
 	}
 
-	cosmosBlock := worker.GetBlockResult(int64(height))
-
-	evmBlock, err := evm.Parse(context.Background(), int64(height))
-	if err != nil {
-		return nil, err
-	}
-
-	return &BlockData{
-		CosmosBlock: cosmosBlock,
-		EvmBlock:    evmBlock,
-	}, nil
+	return worker.GetBlockResult(int64(height)), nil
 }
