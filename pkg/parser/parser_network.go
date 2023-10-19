@@ -10,6 +10,6 @@ type NetworkData struct {
 	EvmData string `json:"evmData"`
 }
 
-func (p *Parser) getBlockFromNetwork(height int64) {
-	p.ChanelNewBlock = worker.GetBlockResult(height)
+func (p *Parser) getBlockFromNetwork(height int64, withTrx bool) {
+	p.ChanelNewBlock = worker.GetBlockResult(height, withTrx)
 }
