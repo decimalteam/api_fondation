@@ -2,7 +2,9 @@ package parser
 
 import (
 	"bitbucket.org/decimalteam/api_fondation/types"
+	"bitbucket.org/decimalteam/api_fondation/worker"
 	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"sync"
 
 	"github.com/nats-io/nats.go"
@@ -30,6 +32,13 @@ type Parser struct {
 }
 
 func NewParser(interval int, currNet BlockchainNetwork, indexNode, parseServiceHost, natsConfig string, logger *logrus.Logger) *Parser {
+
+	// Setup config for decimal module
+	config := sdk.GetConfig()
+	worker.SetBech32Prefixes(config)
+	worker.SetBip44CoinType(config)
+	worker.RegisterBaseDenom()
+	config.Seal()
 
 	return &Parser{
 		Interval:         interval,

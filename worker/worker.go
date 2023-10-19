@@ -36,13 +36,6 @@ func GetBlockResult(height int64) *types.BlockData {
 
 	accum := events.NewEventAccumulator()
 
-	// Setup config
-	config := sdk.GetConfig()
-	SetBech32Prefixes(config)
-	SetBip44CoinType(config)
-	RegisterBaseDenom()
-	config.Seal()
-
 	cdc := encoding.MakeConfig(GetModuleBasics())
 
 	cl, err := client.New()
