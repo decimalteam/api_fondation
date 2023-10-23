@@ -129,6 +129,8 @@ import (
 func GetEvmBlock(height int64) *evm.BlockEVM {
 	ctx := context.Background()
 
+	encoding.MakeConfig(GetModuleBasics())
+
 	cl, err := client.New()
 	if err != nil {
 		panicError(err)
