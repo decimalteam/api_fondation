@@ -1,4 +1,4 @@
-VERSION=1.0.64
+VERSION=1.0.66
 #VER_MAJ_MIN      := $(shell git describe --tags)
 VER_MAJ_MIN      := $(subst ., ,$(VERSION))
 VERSION        := $(word 1,$(VER_MAJ_MIN))
