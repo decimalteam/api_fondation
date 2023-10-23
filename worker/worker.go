@@ -126,10 +126,8 @@ import (
 //	}
 //}
 
-func GetEvmBlock(height int64) evm.BlockEVM {
+func GetEvmBlock(height int64) *types.BlockData {
 	ctx := context.Background()
-
-	encoding.MakeConfig(GetModuleBasics())
 
 	cl, err := client.New()
 	if err != nil {
@@ -179,11 +177,14 @@ func GetEvmBlock(height int64) evm.BlockEVM {
 	web3Receipts := <-web3ReceiptsChan
 
 	// Create and fill Block object and then marshal to JSON
-	return evm.BlockEVM{
-		Header:       web3Block.Header(),
-		Transactions: web3Transactions,
-		Uncles:       web3Body.Uncles,
-		Receipts:     web3Receipts,
+	return &types.BlockData{
+		CosmosBlock: &cosmos.Block{},
+		EvmBlock: &evm.BlockEVM{
+			Header:       web3Block.Header(),
+			Transactions: web3Transactions,
+			Uncles:       web3Body.Uncles,
+			Receipts:     web3Receipts,
+		},
 	}
 }
 
