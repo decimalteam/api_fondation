@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"bitbucket.org/decimalteam/api_fondation/pkg/parser/evm"
 	"bitbucket.org/decimalteam/api_fondation/types"
 	"bitbucket.org/decimalteam/api_fondation/worker"
 	"fmt"
@@ -71,6 +72,10 @@ func (p *Parser) NewBlock(height int64, withTrx bool) {
 	//	return
 	//}
 	//ch <- natsBlockData
+}
+
+func (p *Parser) GetEvmBlock(height int64) *evm.BlockEVM {
+	return p.getEvmBlock(height)
 }
 
 func getBlockFromNats(natsConfig string) (*types.BlockData, error) {
