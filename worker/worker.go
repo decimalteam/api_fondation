@@ -126,67 +126,67 @@ import (
 //	}
 //}
 
-func GetEvmBlock(height int64) *types.BlockData {
-	ctx := context.Background()
-
-	cl, err := client.New()
-	if err != nil {
-		panicError(err)
-	}
-
-	// Fetch everything needed from Tendermint RPC and EVM
-	start := time.Now()
-	web3BlockChan := make(chan *web3types.Block)
-	web3ReceiptsChan := make(chan web3types.Receipts)
-	go FetchBlockWeb3(ctx, cl.Web3Client, height, web3BlockChan)
-
-	web3Block := <-web3BlockChan
-	web3Body := web3Block.Body()
-	web3Transactions := make([]*evm.TransactionEVM, len(web3Body.Transactions))
-
-	go FetchBlockTxReceiptsWeb3(cl.EthRpcClient, web3Block, web3ReceiptsChan)
-	for i, transaction := range web3Body.Transactions {
-		msg, err := transaction.AsMessage(web3types.NewLondonSigner(cl.Web3ChainId), nil)
-		panicError(err)
-		web3Transactions[i] = &evm.TransactionEVM{
-			Type:             web3hexutil.Uint64(transaction.Type()),
-			Hash:             transaction.Hash(),
-			Nonce:            web3hexutil.Uint64(transaction.Nonce()),
-			BlockHash:        web3Block.Hash(),
-			BlockNumber:      web3hexutil.Uint64(web3Block.NumberU64()),
-			TransactionIndex: web3hexutil.Uint64(uint64(i)),
-			From:             msg.From(),
-			To:               msg.To(),
-			Value:            (*web3hexutil.Big)(msg.Value()),
-			Data:             msg.Data(),
-			Gas:              web3hexutil.Uint64(msg.Gas()),
-			GasPrice:         (*web3hexutil.Big)(msg.GasPrice()),
-			ChainId:          (*web3hexutil.Big)(transaction.ChainId()),
-			AccessList:       msg.AccessList(),
-			GasTipCap:        (*web3hexutil.Big)(msg.GasTipCap()),
-			GasFeeCap:        (*web3hexutil.Big)(msg.GasFeeCap()),
-		}
-	}
-
-	fmt.Println(
-		fmt.Sprintf("Compiled block (%s)", DurationToString(time.Since(start))),
-		"block", height,
-		"txs", len(web3Transactions),
-	)
-
-	web3Receipts := <-web3ReceiptsChan
-
-	// Create and fill Block object and then marshal to JSON
-	return &types.BlockData{
-		CosmosBlock: &cosmos.Block{},
-		EvmBlock: &evm.BlockEVM{
-			Header:       web3Block.Header(),
-			Transactions: web3Transactions,
-			Uncles:       web3Body.Uncles,
-			Receipts:     web3Receipts,
-		},
-	}
-}
+//func GetEvmBlock(height int64) *types.BlockData {
+//	ctx := context.Background()
+//
+//	cl, err := client.New()
+//	if err != nil {
+//		panicError(err)
+//	}
+//
+//	// Fetch everything needed from Tendermint RPC and EVM
+//	start := time.Now()
+//	web3BlockChan := make(chan *web3types.Block)
+//	web3ReceiptsChan := make(chan web3types.Receipts)
+//	go FetchBlockWeb3(ctx, cl.Web3Client, height, web3BlockChan)
+//
+//	web3Block := <-web3BlockChan
+//	web3Body := web3Block.Body()
+//	web3Transactions := make([]*evm.TransactionEVM, len(web3Body.Transactions))
+//
+//	go FetchBlockTxReceiptsWeb3(cl.EthRpcClient, web3Block, web3ReceiptsChan)
+//	for i, transaction := range web3Body.Transactions {
+//		msg, err := transaction.AsMessage(web3types.NewLondonSigner(cl.Web3ChainId), nil)
+//		panicError(err)
+//		web3Transactions[i] = &evm.TransactionEVM{
+//			Type:             web3hexutil.Uint64(transaction.Type()),
+//			Hash:             transaction.Hash(),
+//			Nonce:            web3hexutil.Uint64(transaction.Nonce()),
+//			BlockHash:        web3Block.Hash(),
+//			BlockNumber:      web3hexutil.Uint64(web3Block.NumberU64()),
+//			TransactionIndex: web3hexutil.Uint64(uint64(i)),
+//			From:             msg.From(),
+//			To:               msg.To(),
+//			Value:            (*web3hexutil.Big)(msg.Value()),
+//			Data:             msg.Data(),
+//			Gas:              web3hexutil.Uint64(msg.Gas()),
+//			GasPrice:         (*web3hexutil.Big)(msg.GasPrice()),
+//			ChainId:          (*web3hexutil.Big)(transaction.ChainId()),
+//			AccessList:       msg.AccessList(),
+//			GasTipCap:        (*web3hexutil.Big)(msg.GasTipCap()),
+//			GasFeeCap:        (*web3hexutil.Big)(msg.GasFeeCap()),
+//		}
+//	}
+//
+//	fmt.Println(
+//		fmt.Sprintf("Compiled block (%s)", DurationToString(time.Since(start))),
+//		"block", height,
+//		"txs", len(web3Transactions),
+//	)
+//
+//	web3Receipts := <-web3ReceiptsChan
+//
+//	// Create and fill Block object and then marshal to JSON
+//	return &types.BlockData{
+//		CosmosBlock: &cosmos.Block{},
+//		EvmBlock: &evm.BlockEVM{
+//			Header:       web3Block.Header(),
+//			Transactions: web3Transactions,
+//			Uncles:       web3Body.Uncles,
+//			Receipts:     web3Receipts,
+//		},
+//	}
+//}
 
 func GetBlockResult(height int64, withTrx bool) *types.BlockData {
 	ctx := context.Background()
