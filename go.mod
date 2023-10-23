@@ -5,16 +5,16 @@ go 1.19
 require (
 	bitbucket.org/decimalteam/go-smart-node v0.2.1
 	cosmossdk.io/math v1.0.0-beta.4
-	github.com/cosmos/cosmos-sdk v0.46.6
-	github.com/cosmos/ibc-go/v5 v5.1.0
+	github.com/cosmos/cosmos-sdk v0.46.7
+	github.com/cosmos/ibc-go/v5 v5.2.0
 	github.com/dustin/go-humanize v1.0.0
 	github.com/ethereum/go-ethereum v1.10.26
-	github.com/evmos/ethermint v0.20.0-rc4
+	github.com/evmos/ethermint v0.20.0-rc5
 	github.com/gin-gonic/gin v1.9.1
 	github.com/nats-io/nats.go v1.28.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/status-im/keycard-go v0.0.0-20200402102358-957c09536969
-	github.com/tendermint/tendermint v0.34.23
+	github.com/tendermint/tendermint v0.34.24
 	github.com/valyala/fasthttp v1.48.0
 )
 
