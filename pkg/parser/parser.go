@@ -51,8 +51,8 @@ func NewParser(interval int, currNet BlockchainNetwork, indexNode, parseServiceH
 	}
 }
 
-func (p *Parser) NewBlock(height int64, withTrx bool) {
-	p.getBlockFromNetwork(height, withTrx)
+func (p *Parser) NewBlock(height int64) {
+	p.getBlockFromNetwork(height)
 
 	//indexNodeBlock, err := getBlockFromIndexer(p.IndexNode)
 	//if err != nil {
