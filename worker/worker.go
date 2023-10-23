@@ -64,10 +64,10 @@ func GetBlockResult(height int64, withTrx bool) *types.BlockData {
 	go FetchBlockWeb3(ctx, cl.Web3Client, height, web3BlockChan)
 
 	web3Block := <-web3BlockChan
+	web3Body := web3Block.Body()
+	web3Transactions := make([]*evm.TransactionEVM, len(web3Body.Transactions))
 	if withTrx {
 		go FetchBlockTxReceiptsWeb3(cl.EthRpcClient, web3Block, web3ReceiptsChan)
-		web3Body := web3Block.Body()
-		web3Transactions := make([]*evm.TransactionEVM, len(web3Body.Transactions))
 		for i, tx := range web3Body.Transactions {
 			msg, err := tx.AsMessage(web3types.NewLondonSigner(cl.Web3ChainId), nil)
 			panicError(err)
