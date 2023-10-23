@@ -126,7 +126,7 @@ import (
 //	}
 //}
 
-func GetEvmBlock(height int64) *evm.BlockEVM {
+func GetEvmBlock(height int64) evm.BlockEVM {
 	ctx := context.Background()
 
 	encoding.MakeConfig(GetModuleBasics())
@@ -179,7 +179,7 @@ func GetEvmBlock(height int64) *evm.BlockEVM {
 	web3Receipts := <-web3ReceiptsChan
 
 	// Create and fill Block object and then marshal to JSON
-	return &evm.BlockEVM{
+	return evm.BlockEVM{
 		Header:       web3Block.Header(),
 		Transactions: web3Transactions,
 		Uncles:       web3Body.Uncles,

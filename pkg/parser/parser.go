@@ -74,7 +74,7 @@ func (p *Parser) NewBlock(height int64, withTrx bool) {
 	//ch <- natsBlockData
 }
 
-func (p *Parser) GetEvmBlock(height int64) *evm.BlockEVM {
+func (p *Parser) GetEvmBlock(height int64) evm.BlockEVM {
 	return p.getEvmBlock(height)
 }
 
