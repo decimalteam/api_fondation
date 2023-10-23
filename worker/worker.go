@@ -188,7 +188,71 @@ func GetEvmBlock(height int64) *types.BlockData {
 	}
 }
 
-func GetBlockResult(height int64, withTrx bool) *types.BlockData {
+func GetBlockOnly(height int64) *types.BlockData {
+	ctx := context.Background()
+
+	accum := events.NewEventAccumulator()
+
+	cdc := encoding.MakeConfig(GetModuleBasics())
+
+	cl, err := client.New()
+	if err != nil {
+		panicError(err)
+	}
+
+	// Fetch requested block from Tendermint RPC
+	block := fetchBlock(ctx, cl.RpcClient, height)
+	if block == nil {
+		return nil
+	}
+
+	// Fetch everything needed from Tendermint RPC and EVM
+	start := time.Now()
+	txsChan := make(chan []cosmos.Tx)
+	resultsChan := make(chan *ctypes.ResultBlockResults)
+	sizeChan := make(chan int)
+	web3BlockChan := make(chan *web3types.Block)
+	go fetchBlockResults(ctx, cl.RpcClient, cdc, height, *block, accum, txsChan, resultsChan)
+	go fetchBlockSize(ctx, cl.RpcClient, height, sizeChan)
+	txs := <-txsChan
+	results := <-resultsChan
+	size := <-sizeChan
+	go FetchBlockWeb3(ctx, cl.Web3Client, height, web3BlockChan)
+
+	web3Block := <-web3BlockChan
+	web3Body := web3Block.Body()
+	web3Transactions := make([]*evm.TransactionEVM, len(web3Body.Transactions))
+
+	fmt.Println(
+		fmt.Sprintf("Compiled block (%s)", DurationToString(time.Since(start))),
+		"block", height,
+		"txs", len(txs),
+		"begin-block-events", len(results.BeginBlockEvents),
+		"end-block-events", len(results.EndBlockEvents),
+	)
+
+	// Create and fill Block object and then marshal to JSON
+	return &types.BlockData{
+		CosmosBlock: &cosmos.Block{
+			ID:       cosmos.BlockId{Hash: block.BlockID.Hash.String()},
+			Evidence: block.Block.Evidence,
+			Header: cosmos.Header{
+				Time:   block.Block.Time.String(),
+				Height: int(block.Block.Height),
+			},
+			LastCommit: block.Block.LastCommit,
+			Data:       cosmos.BlockTx{Txs: txs},
+			Size:       size,
+		},
+		EvmBlock: &evm.BlockEVM{
+			Header:       web3Block.Header(),
+			Transactions: web3Transactions,
+			Uncles:       web3Body.Uncles,
+		},
+	}
+}
+
+func GetBlockResult(height int64) *types.BlockData {
 	ctx := context.Background()
 
 	accum := events.NewEventAccumulator()
@@ -223,29 +287,28 @@ func GetBlockResult(height int64, withTrx bool) *types.BlockData {
 	web3Block := <-web3BlockChan
 	web3Body := web3Block.Body()
 	web3Transactions := make([]*evm.TransactionEVM, len(web3Body.Transactions))
-	if withTrx {
-		go FetchBlockTxReceiptsWeb3(cl.EthRpcClient, web3Block, web3ReceiptsChan)
-		for i, tx := range web3Body.Transactions {
-			msg, err := tx.AsMessage(web3types.NewLondonSigner(cl.Web3ChainId), nil)
-			panicError(err)
-			web3Transactions[i] = &evm.TransactionEVM{
-				Type:             web3hexutil.Uint64(tx.Type()),
-				Hash:             tx.Hash(),
-				Nonce:            web3hexutil.Uint64(tx.Nonce()),
-				BlockHash:        web3Block.Hash(),
-				BlockNumber:      web3hexutil.Uint64(web3Block.NumberU64()),
-				TransactionIndex: web3hexutil.Uint64(uint64(i)),
-				From:             msg.From(),
-				To:               msg.To(),
-				Value:            (*web3hexutil.Big)(msg.Value()),
-				Data:             msg.Data(),
-				Gas:              web3hexutil.Uint64(msg.Gas()),
-				GasPrice:         (*web3hexutil.Big)(msg.GasPrice()),
-				ChainId:          (*web3hexutil.Big)(tx.ChainId()),
-				AccessList:       msg.AccessList(),
-				GasTipCap:        (*web3hexutil.Big)(msg.GasTipCap()),
-				GasFeeCap:        (*web3hexutil.Big)(msg.GasFeeCap()),
-			}
+
+	go FetchBlockTxReceiptsWeb3(cl.EthRpcClient, web3Block, web3ReceiptsChan)
+	for i, tx := range web3Body.Transactions {
+		msg, err := tx.AsMessage(web3types.NewLondonSigner(cl.Web3ChainId), nil)
+		panicError(err)
+		web3Transactions[i] = &evm.TransactionEVM{
+			Type:             web3hexutil.Uint64(tx.Type()),
+			Hash:             tx.Hash(),
+			Nonce:            web3hexutil.Uint64(tx.Nonce()),
+			BlockHash:        web3Block.Hash(),
+			BlockNumber:      web3hexutil.Uint64(web3Block.NumberU64()),
+			TransactionIndex: web3hexutil.Uint64(uint64(i)),
+			From:             msg.From(),
+			To:               msg.To(),
+			Value:            (*web3hexutil.Big)(msg.Value()),
+			Data:             msg.Data(),
+			Gas:              web3hexutil.Uint64(msg.Gas()),
+			GasPrice:         (*web3hexutil.Big)(msg.GasPrice()),
+			ChainId:          (*web3hexutil.Big)(tx.ChainId()),
+			AccessList:       msg.AccessList(),
+			GasTipCap:        (*web3hexutil.Big)(msg.GasTipCap()),
+			GasFeeCap:        (*web3hexutil.Big)(msg.GasFeeCap()),
 		}
 	}
 
