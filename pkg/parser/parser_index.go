@@ -27,5 +27,5 @@ func (p *Parser) getBlockFromIndexer(indexerNode string) (*types.BlockData, erro
 		return res, err
 	}
 
-	return worker.GetBlockResult(int64(height), true), nil
+	return worker.GetBlockResult(int64(height)), nil
 }
