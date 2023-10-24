@@ -297,7 +297,10 @@ func GetBlockResult(height int64) *types.BlockData {
 	go FetchBlockTxReceiptsWeb3(cl.EthRpcClient, web3Block, web3ReceiptsChan)
 	for i, tx := range web3Body.Transactions {
 		msg, err := tx.AsMessage(web3types.NewLondonSigner(cl.Web3ChainId), nil)
-		panicError(err)
+		if err != nil {
+			panicError(err)
+			continue
+		}
 		web3Transactions[i] = &evm.TransactionEVM{
 			Type:             web3hexutil.Uint64(tx.Type()),
 			Hash:             tx.Hash(),
