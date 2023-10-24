@@ -267,6 +267,7 @@ func GetBlockResult(height int64) *types.BlockData {
 	cl, err := client.New()
 	if err != nil {
 		panicError(err)
+		return nil
 	}
 
 	// Fetch requested block from Tendermint RPC
