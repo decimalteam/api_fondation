@@ -494,7 +494,10 @@ func fetchBlockResults(ctx context.Context, rpcClient *rpc.HTTP, cdc params.Enco
 		txr := blockResults.TxsResults[i]
 
 		recoveredTx, err := cdc.TxConfig.TxDecoder()(tx)
-		panicError(err)
+		if err != nil {
+			panicError(err)
+			continue
+		}
 
 		// Parse transaction results logs
 		err = json.Unmarshal([]byte(txr.Log), &txLog)
