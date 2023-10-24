@@ -419,7 +419,6 @@ func GetBlockResult(height int64) *types.BlockData {
 func panicError(err error) {
 	if err != nil {
 		fmt.Println(fmt.Sprintf("Error: %v", err))
-		//panic(err)
 		return
 	}
 }
