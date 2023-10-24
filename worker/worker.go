@@ -636,7 +636,10 @@ func parseTxInfo(tx sdk.Tx, cdc params.EncodingConfig) (txInfo cosmos.TxInfo) {
 	for _, rawMsg := range tx.GetMsgs() {
 		parameters := make(map[string]interface{})
 		err := json.Unmarshal(cdc.Codec.MustMarshalJSON(rawMsg), &parameters)
-		panicError(err)
+		if err != nil {
+			panicError(err)
+			continue
+		}
 		var msg cosmos.TxMsg
 		msg.Type = sdk.MsgTypeURL(rawMsg)
 		msg.Params = parameters
