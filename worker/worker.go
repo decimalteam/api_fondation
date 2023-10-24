@@ -523,6 +523,7 @@ func fetchBlockResults(ctx context.Context, rpcClient *rpc.HTTP, cdc params.Enco
 			if err != nil {
 				fmt.Printf("error in event %v\n", event.Type)
 				panicError(err)
+				continue
 			}
 		}
 	}
