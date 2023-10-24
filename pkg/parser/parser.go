@@ -28,7 +28,7 @@ type Parser struct {
 	ParseServiceHost string
 	NatsConfig       string
 	Logger           *logrus.Logger
-	ChanelNewBlock   *types.BlockData
+	NewBlockData     *types.BlockData
 }
 
 func NewParser(interval int, currNet BlockchainNetwork, indexNode, parseServiceHost, natsConfig string, logger *logrus.Logger) *Parser {
@@ -47,9 +47,12 @@ func NewParser(interval int, currNet BlockchainNetwork, indexNode, parseServiceH
 		ParseServiceHost: parseServiceHost,
 		NatsConfig:       natsConfig,
 		Logger:           logger,
-		ChanelNewBlock:   nil,
+		NewBlockData:     nil,
 	}
 }
+
+//TODO: 1. Na api Fondation parser.NewBlock nada zdelatiob esli block on ne ahodit v blokceine
+//TODO: stob ne atvalilasi v panic a stob vernul nil
 
 func (p *Parser) NewBlock(height int64) {
 	p.getBlockFromNetwork(height)

@@ -11,13 +11,13 @@ type NetworkData struct {
 }
 
 func (p *Parser) getBlockFromNetwork(height int64) {
-	p.ChanelNewBlock = worker.GetBlockResult(height)
+	p.NewBlockData = worker.GetBlockResult(height)
 }
 
 func (p *Parser) getEvmBlock(height int64) {
-	p.ChanelNewBlock = worker.GetEvmBlock(height)
+	p.NewBlockData = worker.GetEvmBlock(height)
 }
 
 func (p *Parser) getBlockOnly(height int64) {
-	p.ChanelNewBlock = worker.GetBlockOnly(height)
+	p.NewBlockData = worker.GetBlockOnly(height)
 }
