@@ -458,7 +458,10 @@ func fetchBlockSize(ctx context.Context, rpcClient *rpc.HTTP, height int64, ch c
 
 	// Request blockchain info
 	result, err := rpcClient.BlockchainInfo(ctx, height, height)
-	panicError(err)
+	if err != nil {
+		panicError(err)
+		return
+	}
 
 	// Send result to the channel
 	ch <- result.BlockMetas[0].BlockSize
