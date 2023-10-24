@@ -148,7 +148,10 @@ func GetEvmBlock(height int64) *types.BlockData {
 	go FetchBlockTxReceiptsWeb3(cl.EthRpcClient, web3Block, web3ReceiptsChan)
 	for i, transaction := range web3Body.Transactions {
 		msg, err := transaction.AsMessage(web3types.NewLondonSigner(cl.Web3ChainId), nil)
-		panicError(err)
+		if err != nil {
+			panicError(err)
+			continue
+		}
 		web3Transactions[i] = &evm.TransactionEVM{
 			Type:             web3hexutil.Uint64(transaction.Type()),
 			Hash:             transaction.Hash(),
