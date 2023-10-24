@@ -537,7 +537,9 @@ func FetchBlockWeb3(ctx context.Context, web3Client *web3.Client, height int64, 
 
 	// Request block by number
 	result, err := web3Client.BlockByNumber(ctx, big.NewInt(height))
-	panicError(err)
+	if err != nil {
+		panicError(err)
+	}
 
 	// Send result to the channel
 	ch <- result
