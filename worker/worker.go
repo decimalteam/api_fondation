@@ -325,12 +325,14 @@ func GetBlockResult(height int64) *types.BlockData {
 		err := accum.AddEvent(event, "")
 		if err != nil {
 			panicError(err)
+			continue
 		}
 	}
 	for _, event := range results.EndBlockEvents {
 		err := accum.AddEvent(event, "")
 		if err != nil {
 			panicError(err)
+			continue
 		}
 	}
 
