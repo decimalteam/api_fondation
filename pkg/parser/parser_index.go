@@ -2,14 +2,16 @@ package parser
 
 import (
 	"bitbucket.org/decimalteam/api_fondation/client"
+	"bitbucket.org/decimalteam/api_fondation/pkg/parser/cosmos"
+	"bitbucket.org/decimalteam/api_fondation/pkg/parser/evm"
 	"encoding/json"
 	"fmt"
 )
 
 type IndexData struct {
-	Height  string `json:"height"`
-	Data    string `json:"data"`
-	EvmData string `json:"evmData"`
+	Height  string        `json:"height"`
+	Data    *cosmos.Block `json:"data"`
+	EvmData *evm.BlockEVM `json:"evmData"`
 }
 
 func (p *Parser) getBlockFromIndexer(height int64) {
@@ -18,7 +20,7 @@ func (p *Parser) getBlockFromIndexer(height int64) {
 	url := fmt.Sprintf("%s/getBlock?height=%d", p.IndexNode, height)
 	bytes := client.GetRequest(url)
 
-	var dataBlock map[string]interface{}
+	var dataBlock IndexData
 
 	_ = json.Unmarshal(bytes, &dataBlock)
 
