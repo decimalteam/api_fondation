@@ -55,13 +55,13 @@ func NewParser(interval int, currNet BlockchainNetwork, indexNode, parseServiceH
 //TODO: stob ne atvalilasi v panic a stob vernul nil
 
 func (p *Parser) NewBlock(height int64) {
-	p.getBlockFromNetwork(height)
 
-	//indexNodeBlock, err := getBlockFromIndexer(p.IndexNode)
-	//if err != nil {
-	//	return
-	//}
-	//ch <- indexNodeBlock
+	p.getBlockFromIndexer(height)
+	if p.NewBlockData != nil {
+		return
+	}
+
+	p.getBlockFromNetwork(height)
 
 	//parseServiceBlockData, err := getBlockFromDataSource(p.ParseServiceHost)
 	//if err != nil {
