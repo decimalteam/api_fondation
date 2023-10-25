@@ -1,10 +1,9 @@
 package parser
 
 import (
-	"fmt"
-	"strconv"
-
 	"bitbucket.org/decimalteam/api_fondation/client"
+	"encoding/json"
+	"fmt"
 )
 
 type IndexData struct {
@@ -19,10 +18,9 @@ func (p *Parser) getBlockFromIndexer(height int64) {
 	url := fmt.Sprintf("%s/getBlock?height=%d", p.IndexNode, height)
 	bytes := client.GetRequest(url)
 
-	dataBlock, err := strconv.Atoi(string(bytes))
-	if err != nil {
-		fmt.Printf("get block from indexer error: %v", err)
-	}
+	var dataBlock map[string]interface{}
+
+	_ = json.Unmarshal(bytes, &dataBlock)
 
 	fmt.Println(dataBlock)
 }
