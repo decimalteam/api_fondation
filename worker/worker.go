@@ -2,7 +2,6 @@ package worker
 
 import (
 	"bitbucket.org/decimalteam/api_fondation/pkg/parser/evm"
-	"bitbucket.org/decimalteam/go-smart-node/app"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -263,7 +262,7 @@ func GetBlockResult(height int64) *types.BlockData {
 
 	accum := events.NewEventAccumulator()
 
-	cdc := encoding.MakeConfig(app.ModuleBasics)
+	cdc := encoding.MakeConfig(GetModuleBasics())
 
 	cl, err := client.New()
 	if err != nil {
