@@ -225,6 +225,9 @@ func GetBlockOnly(height int64) *types.BlockData {
 	go FetchBlockWeb3(ctx, cl.Web3Client, height, web3BlockChan)
 
 	web3Block := <-web3BlockChan
+	if web3Block == nil {
+		return nil
+	}
 	web3Body := web3Block.Body()
 	web3Transactions := make([]*evm.TransactionEVM, len(web3Body.Transactions))
 
