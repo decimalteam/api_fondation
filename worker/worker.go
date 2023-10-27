@@ -409,6 +409,7 @@ func GetBlockResult(height int64) *types.BlockData {
 			EndBlockEvents:    parseEvents(results.EndBlockEvents),
 			BeginBlockEvents:  parseEvents(results.BeginBlockEvents),
 			Size:              size,
+			StateChanges:      *accum,
 		},
 		EvmBlock: &evm.BlockEVM{
 			Header:       web3Block.Header(),

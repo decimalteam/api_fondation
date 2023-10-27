@@ -1,17 +1,22 @@
 package cosmos
 
+import (
+	"bitbucket.org/decimalteam/api_fondation/events"
+)
+
 type Block struct {
-	ID                BlockId            `json:"id"`
-	Header            Header             `json:"header"`
-	Data              BlockTx            `json:"data"`
-	Evidence          interface{}        `json:"evidence"`
-	LastCommit        interface{}        `json:"last_commit"`
-	Emission          string             `json:"emission"`
-	Rewards           []ProposerReward   `json:"rewards"`
-	CommissionRewards []CommissionReward `json:"commission_rewards"`
-	BeginBlockEvents  []Event            `json:"begin_block_events"`
-	EndBlockEvents    []Event            `json:"end_block_events"`
-	Size              int                `json:"size"`
+	ID                BlockId                 `json:"id"`
+	Header            Header                  `json:"header"`
+	Data              BlockTx                 `json:"data"`
+	Evidence          interface{}             `json:"evidence"`
+	LastCommit        interface{}             `json:"last_commit"`
+	Emission          string                  `json:"emission"`
+	Rewards           []ProposerReward        `json:"rewards"`
+	CommissionRewards []CommissionReward      `json:"commission_rewards"`
+	BeginBlockEvents  []Event                 `json:"begin_block_events"`
+	EndBlockEvents    []Event                 `json:"end_block_events"`
+	Size              int                     `json:"size"`
+	StateChanges      events.EventAccumulator `json:"state_changes"`
 }
 
 type BlockTx struct {
