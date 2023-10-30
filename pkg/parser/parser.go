@@ -76,14 +76,8 @@ func (p *Parser) NewBlock(height int64) {
 	//ch <- natsBlockData
 }
 
-func (p *Parser) NewBlockData(hFrom, hTo int64) []types.BlockData {
-
-	blocksFromToHeight := p.getBlocksFromToHeight(hFrom, hTo)
-	if len(blocksFromToHeight) == 0 {
-		return
-	}
-
-	return blocksFromToHeight
+func (p *Parser) GetNewBlockData(hFrom, hTo int64) []types.BlockData {
+	return p.getBlocksFromToHeight(hFrom, hTo)
 }
 
 func (p *Parser) GetEvmBlock(height int64) {
