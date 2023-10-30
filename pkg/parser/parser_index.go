@@ -30,3 +30,24 @@ func (p *Parser) getBlockFromIndexer(height int64) {
 		EvmBlock:    dataBlock.EvmData,
 	}
 }
+
+func (p *Parser) getBlocksFromIndexer(heightFrom int64, heightTo int64) []types.BlockData {
+	//var res *types.BlockData
+
+	url := fmt.Sprintf("%s/getBlocks?height_from=%d&height_to=%d", p.IndexNode, heightFrom, heightTo)
+	bytes := client.GetRequest(url)
+
+	var dataBlocks []IndexData
+	var parseBlocks []types.BlockData
+
+	_ = json.Unmarshal(bytes, &dataBlocks)
+
+	for _, val := range dataBlocks {
+		parseBlocks = append(parseBlocks, types.BlockData{
+			CosmosBlock: val.Data,
+			EvmBlock:    val.EvmData,
+		})
+	}
+
+	return parseBlocks
+}
