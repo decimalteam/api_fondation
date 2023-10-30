@@ -62,18 +62,6 @@ func (p *Parser) NewBlock(height int64) {
 	}
 
 	p.getBlockFromNetwork(height)
-
-	//parseServiceBlockData, err := getBlockFromDataSource(p.ParseServiceHost)
-	//if err != nil {
-	//	return
-	//}
-	//ch <- parseServiceBlockData
-	//
-	//natsBlockData, err := getBlockFromNats(p.NatsConfig)
-	//if err != nil {
-	//	return
-	//}
-	//ch <- natsBlockData
 }
 
 func (p *Parser) GetNewBlockData(hFrom, hTo int64) []types.BlockData {
