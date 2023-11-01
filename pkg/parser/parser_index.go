@@ -23,7 +23,10 @@ func (p *Parser) getBlockFromIndexer(height int64) {
 
 	var dataBlock IndexData
 
-	_ = json.Unmarshal(bytes, &dataBlock)
+	err := json.Unmarshal(bytes, &dataBlock)
+	if err != nil {
+		p.Logger.Errorf("unmarashal data from indexer error: %v", err)
+	}
 
 	p.NewBlockData = &types.BlockData{
 		CosmosBlock: dataBlock.Data,
