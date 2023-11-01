@@ -31,8 +31,7 @@ func (p *Parser) getBlockFromIndexer(height int64) {
 	}
 }
 
-func (p *Parser) getBlocksFromIndexer(heightFrom int64, heightTo int64) []types.BlockData {
-	//var res *types.BlockData
+func (p *Parser) getBlocksFromToHeight(heightFrom int64, heightTo int64) []types.BlockData {
 
 	url := fmt.Sprintf("%s/getBlocks?height_from=%d&height_to=%d", p.IndexNode, heightFrom, heightTo)
 	bytes := client.GetRequest(url)

@@ -1,11 +1,12 @@
 package parser
 
 import (
+	"fmt"
+	"sync"
+
 	"bitbucket.org/decimalteam/api_fondation/types"
 	"bitbucket.org/decimalteam/api_fondation/worker"
-	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"sync"
 
 	"github.com/nats-io/nats.go"
 	"github.com/sirupsen/logrus"
@@ -62,18 +63,10 @@ func (p *Parser) NewBlock(height int64) {
 	}
 
 	p.getBlockFromNetwork(height)
+}
 
-	//parseServiceBlockData, err := getBlockFromDataSource(p.ParseServiceHost)
-	//if err != nil {
-	//	return
-	//}
-	//ch <- parseServiceBlockData
-	//
-	//natsBlockData, err := getBlockFromNats(p.NatsConfig)
-	//if err != nil {
-	//	return
-	//}
-	//ch <- natsBlockData
+func (p *Parser) GetNewBlockData(hFrom, hTo int64) []types.BlockData {
+	return p.getBlocksFromToHeight(hFrom, hTo)
 }
 
 func (p *Parser) GetEvmBlock(height int64) {
@@ -111,19 +104,3 @@ func getBlockFromNats(natsConfig string) (*types.BlockData, error) {
 
 	return res, nil
 }
-
-//func getBlockFromDataSource(address string) (*BlockData, error) {
-//	var res *BlockData
-//
-//	cosmosBlock := worker.GetBlockResult(int64(height))
-//
-//	evmBlock, err := evm.Parse(context.Background(), int64(height))
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	return &BlockData{
-//		CosmosBlock: cosmosBlock,
-//		EvmBlock:    evmBlock,
-//	}, nil
-//}
