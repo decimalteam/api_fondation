@@ -57,7 +57,7 @@ func NewParser(interval int, currNet BlockchainNetwork, indexNode, parseServiceH
 func (p *Parser) NewBlock(height int64) {
 
 	p.getBlockFromIndexer(height)
-	if p.NewBlockData != nil {
+	if p.NewBlockData.EvmBlock != nil {
 		return
 	}
 
