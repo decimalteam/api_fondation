@@ -57,12 +57,27 @@ func NewParser(interval int, currNet BlockchainNetwork, indexNode, parseServiceH
 
 func (p *Parser) NewBlock(height int64) {
 
-	p.getBlockFromIndexer(height)
-	if p.NewBlockData.EvmBlock != nil {
+	indexData, err := p.getBlockFromIndexer(height)
+	if err != nil {
+		p.Logger.Errorf("get block from indexer error: %v", err)
 		return
 	}
 
-	p.getBlockFromNetwork(height)
+	var blockData *types.BlockData
+
+	if indexData.Data != nil {
+		blockData.CosmosBlock = indexData.Data
+	}
+
+	if indexData.EvmData != nil {
+		blockData.EvmBlock = indexData.EvmData
+	}
+
+	p.NewBlockData = blockData
+
+	if blockData == nil {
+		p.getBlockFromNetwork(height)
+	}
 }
 
 func (p *Parser) GetNewBlockData(hFrom, hTo int64) []types.BlockData {
