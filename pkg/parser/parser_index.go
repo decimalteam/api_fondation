@@ -15,8 +15,7 @@ type IndexData struct {
 	EvmData *evm.BlockEVM `json:"evmData"`
 }
 
-func (p *Parser) getBlockFromIndexer(height int64) {
-	//var res *types.BlockData
+func (p *Parser) getBlockFromIndexer(height int64) (IndexData, error) {
 
 	url := fmt.Sprintf("%s/getBlock?height=%d", p.IndexNode, height)
 	bytes := client.GetRequest(url)
@@ -26,12 +25,10 @@ func (p *Parser) getBlockFromIndexer(height int64) {
 	err := json.Unmarshal(bytes, &dataBlock)
 	if err != nil {
 		p.Logger.Errorf("unmarashal data from indexer error: %v", err)
+		return IndexData{}, err
 	}
 
-	p.NewBlockData = &types.BlockData{
-		CosmosBlock: dataBlock.Data,
-		EvmBlock:    dataBlock.EvmData,
-	}
+	return dataBlock, nil
 }
 
 func (p *Parser) getBlocksFromToHeight(heightFrom int64, heightTo int64) []types.BlockData {
