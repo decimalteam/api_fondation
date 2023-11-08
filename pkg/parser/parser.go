@@ -63,17 +63,19 @@ func (p *Parser) NewBlock(height int64) {
 		p.Logger.Errorf("get block from indexer error: %v", err)
 	}
 
-	if indexData.Data != nil {
-		blockData.CosmosBlock = indexData.Data
+	if indexData != nil {
+		if indexData.Data != nil {
+			blockData.CosmosBlock = indexData.Data
+		}
+
+		if indexData.EvmData != nil {
+			blockData.EvmBlock = indexData.EvmData
+		}
+
+		p.NewBlockData = blockData
 	}
 
-	if indexData.EvmData != nil {
-		blockData.EvmBlock = indexData.EvmData
-	}
-
-	p.NewBlockData = blockData
-
-	if blockData == nil {
+	if indexData == nil {
 		p.getBlockFromNetwork(height)
 	}
 }
