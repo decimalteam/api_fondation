@@ -23,17 +23,6 @@ func (p *Parser) getBlockOnly(height int64) {
 	p.NewBlockData = worker.GetBlockOnly(height)
 }
 
-func (p *Parser) getNetworkBlocksFromToHeight(heightFrom int64, heightTo int64) []types.BlockData {
-	var networkBlocks []types.BlockData
-
-	for i := heightFrom; i < heightTo; i++ {
-		blockData := worker.GetBlockResult(i)
-
-		networkBlocks = append(networkBlocks, types.BlockData{
-			CosmosBlock: blockData.CosmosBlock,
-			EvmBlock:    blockData.EvmBlock,
-		})
-	}
-
-	return networkBlocks
+func (p *Parser) getNetworkBlock(height int64) *types.BlockData {
+	return worker.GetBlockResult(height)
 }
