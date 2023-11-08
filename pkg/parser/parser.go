@@ -56,14 +56,12 @@ func NewParser(interval int, currNet BlockchainNetwork, indexNode, parseServiceH
 //TODO: stob ne atvalilasi v panic a stob vernul nil
 
 func (p *Parser) NewBlock(height int64) {
+	blockData := new(types.BlockData)
 
 	indexData, err := p.getBlockFromIndexer(height)
 	if err != nil {
 		p.Logger.Errorf("get block from indexer error: %v", err)
-		return
 	}
-
-	var blockData *types.BlockData
 
 	if indexData.Data != nil {
 		blockData.CosmosBlock = indexData.Data
