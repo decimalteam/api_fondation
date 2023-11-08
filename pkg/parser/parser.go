@@ -81,7 +81,19 @@ func (p *Parser) NewBlock(height int64) {
 }
 
 func (p *Parser) GetNewBlockData(hFrom, hTo int64) []types.BlockData {
-	return p.getBlocksFromToHeight(hFrom, hTo)
+	blockData := make([]types.BlockData, 0)
+
+	indexData := p.getIndexerBlocksFromToHeight(hFrom, hTo)
+	if len(indexData) != 0 {
+		blockData = indexData
+	} else {
+		p.Logger.Infof("get empty data from indexer")
+		p.Logger.Infof("get data from blockchain network")
+
+		blockData = p.getNetworkBlocksFromToHeight(hFrom, hTo)
+	}
+
+	return blockData
 }
 
 func (p *Parser) GetEvmBlock(height int64) {
