@@ -90,7 +90,13 @@ func (p *Parser) GetNewBlockData(hFrom, hTo int64) []types.BlockData {
 		p.Logger.Infof("get empty data from indexer")
 		p.Logger.Infof("get data from blockchain network")
 
-		blockData = p.getNetworkBlocksFromToHeight(hFrom, hTo)
+		for h := hFrom; h <= hTo; h++ {
+			networkBlock := p.getNetworkBlock(h)
+			blockData = append(blockData, types.BlockData{
+				CosmosBlock: networkBlock.CosmosBlock,
+				EvmBlock:    networkBlock.EvmBlock,
+			})
+		}
 	}
 
 	return blockData
