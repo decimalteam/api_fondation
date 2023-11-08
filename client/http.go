@@ -39,7 +39,6 @@ func GetRequest(requestURI string) []byte {
 	contentEncoding := resp.Header.Peek("Content-Encoding")
 	var res []byte
 	if bytes.EqualFold(contentEncoding, []byte("gzip")) {
-		fmt.Println("Unzipping...")
 		res, err = resp.BodyGunzip()
 		if err != nil {
 			fmt.Printf("gunzip response body failed: %s\n", err)
