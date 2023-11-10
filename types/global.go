@@ -11,6 +11,7 @@ type LastBlockData struct {
 }
 
 type BlockData struct {
-	CosmosBlock *cosmos.Block
-	EvmBlock    *evm.BlockEVM
+	CosmosBlock  *cosmos.Block
+	EvmBlock     *evm.BlockEVM
+	OldDataIsGet bool
 }
