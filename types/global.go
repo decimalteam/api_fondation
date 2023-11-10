@@ -6,12 +6,12 @@ import (
 )
 
 type LastBlockData struct {
-	Height    int
-	Timestamp int64
+	Height       int
+	Timestamp    int64
+	OldDataIsGet bool
 }
 
 type BlockData struct {
-	CosmosBlock  *cosmos.Block
-	EvmBlock     *evm.BlockEVM
-	OldDataIsGet bool
+	CosmosBlock *cosmos.Block
+	EvmBlock    *evm.BlockEVM
 }
