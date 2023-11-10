@@ -52,9 +52,6 @@ func NewParser(interval int, currNet BlockchainNetwork, indexNode, parseServiceH
 	}
 }
 
-//TODO: 1. Na api Fondation parser.NewBlock nada zdelatiob esli block on ne ahodit v blokceine
-//TODO: stob ne atvalilasi v panic a stob vernul nil
-
 func (p *Parser) NewBlock(height int64) {
 	blockData := new(types.BlockData)
 
@@ -86,19 +83,7 @@ func (p *Parser) GetNewBlockData(hFrom, hTo int64) []types.BlockData {
 	indexData := p.getIndexerBlocksFromToHeight(hFrom, hTo)
 	if len(indexData) != 0 {
 		blockData = indexData
-	} else {
-		p.Logger.Infof("get empty data from indexer")
-		p.Logger.Infof("get data from blockchain network")
-
-		for h := hFrom; h <= hTo; h++ {
-			networkBlock := p.getNetworkBlock(h)
-			blockData = append(blockData, types.BlockData{
-				CosmosBlock: networkBlock.CosmosBlock,
-				EvmBlock:    networkBlock.EvmBlock,
-			})
-		}
 	}
-
 	return blockData
 }
 
