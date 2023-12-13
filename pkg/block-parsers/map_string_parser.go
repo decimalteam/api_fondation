@@ -11,10 +11,10 @@ type MapParserState[T any] struct {
 	kind   string
 }
 
-func NewMapStringParser[T any](source map[string]interface{}, template *T, kind string) MapParserState[T] {
+func NewMapStringParser[T any](source map[string]interface{}, kind string) MapParserState[T] {
 	return MapParserState[T]{
 		Source: source,
-		Target: template,
+		Target: new(T),
 		kind:   kind,
 	}
 }

@@ -34,7 +34,7 @@ func TestMapStringParse(t *testing.T) {
 		},
 	}
 
-	parserEntity := NewMapStringParser(testDataForParsing, new(testTarget), "")
+	parserEntity := NewMapStringParser[testTarget](testDataForParsing, "")
 	parserEntity.Parse()
 
 	result := parserEntity.Target
@@ -76,7 +76,7 @@ func TestMapStringParseKind(t *testing.T) {
 		},
 	}
 
-	parserEntity1 := NewMapStringParser(testDataForParsing, new(testTarget), "kind1")
+	parserEntity1 := NewMapStringParser[testTarget](testDataForParsing, "kind1")
 	parserEntity1.Parse()
 
 	result1 := parserEntity1.Target
@@ -84,7 +84,7 @@ func TestMapStringParseKind(t *testing.T) {
 	assert.Equal(t, "123000000000000000", result1.Amount)
 	assert.Equal(t, "", result1.Amount2)
 
-	parserEntity2 := NewMapStringParser(testDataForParsing, new(testTarget), "kind2")
+	parserEntity2 := NewMapStringParser[testTarget](testDataForParsing, "kind2")
 	parserEntity2.Parse()
 
 	result2 := parserEntity2.Target
