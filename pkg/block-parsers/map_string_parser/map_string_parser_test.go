@@ -1,4 +1,4 @@
-package block_parsers
+package map_string_parser
 
 import (
 	"github.com/stretchr/testify/assert"

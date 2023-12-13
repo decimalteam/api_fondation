@@ -1,16 +1,27 @@
-package block_parsers
+// Package map_string_parser is used for recursive parsing some nested
+// `map[string]interface` data into some struct with tags that contains
+// possible paths to specific nested data fields.
+// Path can be force specified by tag `kind`.
+// For use case examples, look `map_string_parser_test.go` file.
+package map_string_parser
 
 import (
 	"reflect"
 	"strings"
 )
 
+// A MapParserState contains state for package.
 type MapParserState[T any] struct {
+	// Source is a nested map[string]interface{} data for parsing
 	Source map[string]interface{}
+	// Target is the resulting object, where will be saved parsed data
 	Target *T
-	kind   string
+	// kind is the optional qualifying parameter
+	// for determine target field that has the same kind tag value
+	kind string
 }
 
+// NewMapStringParser setup Source data, Target struct and optional kind value
 func NewMapStringParser[T any](source map[string]interface{}, kind string) MapParserState[T] {
 	return MapParserState[T]{
 		Source: source,
@@ -19,6 +30,7 @@ func NewMapStringParser[T any](source map[string]interface{}, kind string) MapPa
 	}
 }
 
+// Parse is the function that directly does parsing
 func (s *MapParserState[T]) Parse() {
 	value := reflect.ValueOf(s.Target)
 	numFields := value.Elem().NumField()
@@ -53,10 +65,9 @@ func (s *MapParserState[T]) Parse() {
 				if parts[0] == name {
 					if paramValue, ok := paramValue.(map[string]interface{}); ok {
 						tail := parts[1:]
-						deepValue := getDeepParamMsg(tail, paramValue)
+						deepValue := getDeepParam(tail, paramValue)
 						if deepValue != nil {
 							field := structType.Field(i)
-							// todo go to !!!!!!!!!!!!!!
 							value.Elem().FieldByName(field.Name).Set(reflect.ValueOf(deepValue))
 						}
 					}
@@ -72,13 +83,13 @@ func (s *MapParserState[T]) Parse() {
 }
 
 // getDeepParam recursive func for go through a path to value
-func getDeepParamMsg(tail []string, paramValue map[string]interface{}) interface{} {
+func getDeepParam(tail []string, paramValue map[string]interface{}) interface{} {
 	for pvKey, pvValue := range paramValue {
 		// TODO can be added max depth level
 		if pvKey == tail[0] {
 			if subVal, ok := pvValue.(map[string]interface{}); ok {
 				newTail := tail[1:]
-				return getDeepParamMsg(newTail, subVal)
+				return getDeepParam(newTail, subVal)
 			} else {
 				return pvValue
 			}
