@@ -1,8 +1,8 @@
 package slice_with_json_parser_test
 
 import (
-	"bitbucket.org/decimalteam/api_fondation/pkg/block-parsers/slice_with_json_parser"
 	"bitbucket.org/decimalteam/api_fondation/pkg/parser/cosmos"
+	"bitbucket.org/decimalteam/api_fondation/pkg/parser_interfaces/slice_with_json_parser"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
