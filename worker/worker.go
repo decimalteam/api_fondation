@@ -1,32 +1,21 @@
 package worker
 
 import (
-	"bitbucket.org/decimalteam/api_fondation/clients"
+	"bitbucket.org/decimalteam/api_fondation/pkg/parser/evm"
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/evmos/ethermint/encoding"
 	"math/big"
-	"net/http"
 	"time"
 
+	"bitbucket.org/decimalteam/api_fondation/client"
 	"bitbucket.org/decimalteam/api_fondation/events"
+	"bitbucket.org/decimalteam/api_fondation/pkg/parser/cosmos"
 	"bitbucket.org/decimalteam/api_fondation/types"
 	"github.com/cosmos/cosmos-sdk/simapp/params"
 	web3 "github.com/ethereum/go-ethereum/ethclient"
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/evmos/ethermint/encoding"
 	rpc "github.com/tendermint/tendermint/rpc/client/http"
-
-	//evmtypes "github.com/evmos/ethermint/x/evm/types"
-
-	// Decimal modules
-
-	//cointypes "bitbucket.org/decimalteam/go-smart-node/x/coin/types"
-	//feetypes "bitbucket.org/decimalteam/go-smart-node/x/fee/types"
-	//legacytypes "bitbucket.org/decimalteam/go-smart-node/x/legacy/types"
-	//nfttypes "bitbucket.org/decimalteam/go-smart-node/x/nft/types"
-	//swaptypes "bitbucket.org/decimalteam/go-smart-node/x/swap/types"
-	//validatortypes "bitbucket.org/decimalteam/go-smart-node/x/validator/types"
 
 	"github.com/dustin/go-humanize"
 	"github.com/status-im/keycard-go/hexutils"
@@ -42,87 +31,280 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-type Worker struct {
-	ctx          context.Context
-	httpClient   *http.Client
-	cdc          params.EncodingConfig
-	logger       log.Logger
-	config       *Config
-	hostname     string
-	rpcClient    *rpc.HTTP
-	web3Client   *web3.Client
-	web3ChainId  *big.Int
-	ethRpcClient *ethrpc.Client
-	query        chan *ParseTask
+//func GetAllTransactionByHeights(height int64, withTrx bool) *types.BlockData {
+//	ctx := context.Background()
+//
+//	accum := events.NewEventAccumulator()
+//
+//	cdc := encoding.MakeConfig(GetModuleBasics())
+//
+//	cl, err := client.New()
+//	if err != nil {
+//		panicError(err)
+//	}
+//
+//	// Fetch requested block from Tendermint RPC
+//	block := fetchBlock(ctx, cl.RpcClient, height)
+//	if block == nil {
+//		return nil
+//	}
+//
+//	// Fetch everything needed from Tendermint RPC and EVM
+//	start := time.Now()
+//	txsChan := make(chan []cosmos.Tx)
+//	resultsChan := make(chan *ctypes.ResultBlockResults)
+//	sizeChan := make(chan int)
+//	web3BlockChan := make(chan *web3types.Block)
+//	web3ReceiptsChan := make(chan web3types.Receipts)
+//	go fetchBlockResults(ctx, cl.RpcClient, cdc, height, *block, accum, txsChan, resultsChan)
+//	go fetchBlockSize(ctx, cl.RpcClient, height, sizeChan)
+//	txs := <-txsChan
+//	results := <-resultsChan
+//	size := <-sizeChan
+//	go FetchBlockWeb3(ctx, cl.Web3Client, height, web3BlockChan)
+//
+//	web3Block := <-web3BlockChan
+//	web3Body := web3Block.Body()
+//	web3Transactions := make([]*evm.TransactionEVM, len(web3Body.Transactions))
+//	if withTrx {
+//		go FetchBlockTxReceiptsWeb3(cl.EthRpcClient, web3Block, web3ReceiptsChan)
+//		for i, tx := range web3Body.Transactions {
+//			msg, err := tx.AsMessage(web3types.NewLondonSigner(cl.Web3ChainId), nil)
+//			panicError(err)
+//			web3Transactions[i] = &evm.TransactionEVM{
+//				Type:             web3hexutil.Uint64(tx.Type()),
+//				Hash:             tx.Hash(),
+//				Nonce:            web3hexutil.Uint64(tx.Nonce()),
+//				BlockHash:        web3Block.Hash(),
+//				BlockNumber:      web3hexutil.Uint64(web3Block.NumberU64()),
+//				TransactionIndex: web3hexutil.Uint64(uint64(i)),
+//				From:             msg.From(),
+//				To:               msg.To(),
+//				Value:            (*web3hexutil.Big)(msg.Value()),
+//				Data:             msg.Data(),
+//				Gas:              web3hexutil.Uint64(msg.Gas()),
+//				GasPrice:         (*web3hexutil.Big)(msg.GasPrice()),
+//				ChainId:          (*web3hexutil.Big)(tx.ChainId()),
+//				AccessList:       msg.AccessList(),
+//				GasTipCap:        (*web3hexutil.Big)(msg.GasTipCap()),
+//				GasFeeCap:        (*web3hexutil.Big)(msg.GasFeeCap()),
+//			}
+//		}
+//	}
+//
+//	fmt.Println(
+//		fmt.Sprintf("Compiled block (%s)", DurationToString(time.Since(start))),
+//		"block", height,
+//		"txs", len(txs),
+//		"begin-block-events", len(results.BeginBlockEvents),
+//		"end-block-events", len(results.EndBlockEvents),
+//	)
+//
+//	web3Receipts := <-web3ReceiptsChan
+//
+//	// Create and fill Block object and then marshal to JSON
+//	return &types.BlockData{
+//		CosmosBlock: &cosmos.Block{
+//			ID:       cosmos.BlockId{Hash: block.BlockID.Hash.String()},
+//			Evidence: block.Block.Evidence,
+//			Header: cosmos.Header{
+//				Time:   block.Block.Time.String(),
+//				Height: int(block.Block.Height),
+//			},
+//			LastCommit:       block.Block.LastCommit,
+//			Data:             cosmos.BlockTx{Txs: txs},
+//			EndBlockEvents:   parseEvents(results.EndBlockEvents),
+//			BeginBlockEvents: parseEvents(results.BeginBlockEvents),
+//			Size:             size,
+//		},
+//		EvmBlock: &evm.BlockEVM{
+//			Header:       web3Block.Header(),
+//			Transactions: web3Transactions,
+//			Uncles:       web3Body.Uncles,
+//			Receipts:     web3Receipts,
+//		},
+//	}
+//}
+
+func GetEvmBlock(height int64) *types.BlockData {
+	ctx := context.Background()
+
+	cl, err := client.New()
+	if err != nil {
+		panicError(err)
+		return nil
+	}
+
+	// Fetch everything needed from Tendermint RPC and EVM
+	start := time.Now()
+	web3BlockChan := make(chan *web3types.Block)
+	web3ReceiptsChan := make(chan web3types.Receipts)
+	go FetchBlockWeb3(ctx, cl.Web3Client, height, web3BlockChan)
+
+	web3Block := <-web3BlockChan
+	web3Body := web3Block.Body()
+	web3Transactions := make([]*evm.TransactionEVM, len(web3Body.Transactions))
+
+	go FetchBlockTxReceiptsWeb3(cl.EthRpcClient, web3Block, web3ReceiptsChan)
+	for i, transaction := range web3Body.Transactions {
+		msg, err := transaction.AsMessage(web3types.NewLondonSigner(cl.Web3ChainId), nil)
+		if err != nil {
+			panicError(err)
+			continue
+		}
+		web3Transactions[i] = &evm.TransactionEVM{
+			Type:             web3hexutil.Uint64(transaction.Type()),
+			Hash:             transaction.Hash(),
+			Nonce:            web3hexutil.Uint64(transaction.Nonce()),
+			BlockHash:        web3Block.Hash(),
+			BlockNumber:      web3hexutil.Uint64(web3Block.NumberU64()),
+			TransactionIndex: web3hexutil.Uint64(uint64(i)),
+			From:             msg.From(),
+			To:               msg.To(),
+			Value:            (*web3hexutil.Big)(msg.Value()),
+			Data:             msg.Data(),
+			Gas:              web3hexutil.Uint64(msg.Gas()),
+			GasPrice:         (*web3hexutil.Big)(msg.GasPrice()),
+			ChainId:          (*web3hexutil.Big)(transaction.ChainId()),
+			AccessList:       msg.AccessList(),
+			GasTipCap:        (*web3hexutil.Big)(msg.GasTipCap()),
+			GasFeeCap:        (*web3hexutil.Big)(msg.GasFeeCap()),
+		}
+	}
+
+	fmt.Println(
+		fmt.Sprintf("Compiled block (%s)", DurationToString(time.Since(start))),
+		"block", height,
+		"txs", len(web3Transactions),
+	)
+
+	web3Receipts := <-web3ReceiptsChan
+
+	// Create and fill Block object and then marshal to JSON
+	return &types.BlockData{
+		CosmosBlock: &cosmos.Block{},
+		EvmBlock: &evm.BlockEVM{
+			Header:       web3Block.Header(),
+			Transactions: web3Transactions,
+			Uncles:       web3Body.Uncles,
+			Receipts:     web3Receipts,
+		},
+	}
 }
 
-type ParseTask struct {
-	height int64
-	txNum  int
-}
-
-func GetBlockResult(height int64) *types.Block {
+func GetBlockOnly(height int64) *types.BlockData {
 	ctx := context.Background()
 
 	accum := events.NewEventAccumulator()
 
-	fmt.Printf("Retrieving block results...", "block", height)
+	cdc := encoding.MakeConfig(GetModuleBasics())
 
-	cdc := encoding.MakeConfig(getModuleBasics())
-
-	rpcClient, err := clients.GetRpcClient(getConfig(), clients.GetHttpClient())
+	cl, err := client.New()
 	if err != nil {
 		panicError(err)
-	}
-
-	web3Client, err := clients.GetWeb3Client(getConfig())
-	if err != nil {
-		panicError(err)
-	}
-
-	ethRpcClient, err := clients.GetEthRpcClient(getConfig())
-	if err != nil {
-		panicError(err)
+		return nil
 	}
 
 	// Fetch requested block from Tendermint RPC
-	block := fetchBlock(ctx, rpcClient, height)
+	block := fetchBlock(ctx, cl.RpcClient, height)
 	if block == nil {
 		return nil
 	}
 
-	// Fetch everything needed from Tendermint RPC aand EVM
+	// Fetch everything needed from Tendermint RPC and EVM
 	start := time.Now()
-	txsChan := make(chan []types.Tx)
+	txsChan := make(chan []cosmos.Tx)
+	resultsChan := make(chan *ctypes.ResultBlockResults)
+	sizeChan := make(chan int)
+	web3BlockChan := make(chan *web3types.Block)
+	go fetchBlockResults(ctx, cl.RpcClient, cdc, height, *block, accum, txsChan, resultsChan)
+	go fetchBlockSize(ctx, cl.RpcClient, height, sizeChan)
+	txs := <-txsChan
+	results := <-resultsChan
+	size := <-sizeChan
+	go FetchBlockWeb3(ctx, cl.Web3Client, height, web3BlockChan)
+
+	web3Block := <-web3BlockChan
+	if web3Block == nil {
+		return nil
+	}
+	web3Body := web3Block.Body()
+	web3Transactions := make([]*evm.TransactionEVM, len(web3Body.Transactions))
+
+	fmt.Println(
+		fmt.Sprintf("Compiled block (%s)", DurationToString(time.Since(start))),
+		"block", height,
+		"txs", len(txs),
+		"begin-block-events", len(results.BeginBlockEvents),
+		"end-block-events", len(results.EndBlockEvents),
+	)
+
+	// Create and fill Block object and then marshal to JSON
+	return &types.BlockData{
+		CosmosBlock: &cosmos.Block{
+			ID:       cosmos.BlockId{Hash: block.BlockID.Hash.String()},
+			Evidence: block.Block.Evidence,
+			Header: cosmos.Header{
+				Time:   block.Block.Time.String(),
+				Height: int(block.Block.Height),
+			},
+			LastCommit: block.Block.LastCommit,
+			Data:       cosmos.BlockTx{Txs: txs},
+			Size:       size,
+		},
+		EvmBlock: &evm.BlockEVM{
+			Header:       web3Block.Header(),
+			Transactions: web3Transactions,
+			Uncles:       web3Body.Uncles,
+		},
+	}
+}
+
+func GetBlockResult(height int64) *types.BlockData {
+	ctx := context.Background()
+
+	accum := events.NewEventAccumulator()
+
+	cdc := encoding.MakeConfig(GetModuleBasics())
+
+	cl, err := client.New()
+	if err != nil {
+		panicError(err)
+		return nil
+	}
+
+	// Fetch requested block from Tendermint RPC
+	block := fetchBlock(ctx, cl.RpcClient, height)
+	if block == nil {
+		return nil
+	}
+
+	// Fetch everything needed from Tendermint RPC and EVM
+	start := time.Now()
+	txsChan := make(chan []cosmos.Tx)
 	resultsChan := make(chan *ctypes.ResultBlockResults)
 	sizeChan := make(chan int)
 	web3BlockChan := make(chan *web3types.Block)
 	web3ReceiptsChan := make(chan web3types.Receipts)
-	go fetchBlockResults(ctx, rpcClient, cdc, height, *block, accum, txsChan, resultsChan)
-	go fetchBlockSize(ctx, rpcClient, height, sizeChan)
+	go fetchBlockResults(ctx, cl.RpcClient, cdc, height, *block, accum, txsChan, resultsChan)
+	go fetchBlockSize(ctx, cl.RpcClient, height, sizeChan)
 	txs := <-txsChan
 	results := <-resultsChan
 	size := <-sizeChan
-	go fetchBlockWeb3(ctx, web3Client, height, web3BlockChan)
+	go FetchBlockWeb3(ctx, cl.Web3Client, height, web3BlockChan)
 
 	web3Block := <-web3BlockChan
-	go fetchBlockTxReceiptsWeb3(ethRpcClient, web3Block, web3ReceiptsChan)
 	web3Body := web3Block.Body()
-	web3Transactions := make([]*types.TransactionEVM, len(web3Body.Transactions))
+	web3Transactions := make([]*evm.TransactionEVM, len(web3Body.Transactions))
+
+	go FetchBlockTxReceiptsWeb3(cl.EthRpcClient, web3Block, web3ReceiptsChan)
 	for i, tx := range web3Body.Transactions {
-		web3Client, err := clients.GetWeb3Client(getConfig())
+		msg, err := tx.AsMessage(web3types.NewLondonSigner(cl.Web3ChainId), nil)
 		if err != nil {
 			panicError(err)
+			continue
 		}
-
-		web3ChainId, err := clients.GetWeb3ChainId(web3Client)
-		if err != nil {
-			panicError(err)
-		}
-
-		msg, err := tx.AsMessage(web3types.NewLondonSigner(web3ChainId), nil)
-		panicError(err)
-		web3Transactions[i] = &types.TransactionEVM{
+		web3Transactions[i] = &evm.TransactionEVM{
 			Type:             web3hexutil.Uint64(tx.Type()),
 			Hash:             tx.Hash(),
 			Nonce:            web3hexutil.Uint64(tx.Nonce()),
@@ -141,26 +323,27 @@ func GetBlockResult(height int64) *types.Block {
 			GasFeeCap:        (*web3hexutil.Big)(msg.GasFeeCap()),
 		}
 	}
-	web3Receipts := <-web3ReceiptsChan
 
 	for _, event := range results.BeginBlockEvents {
 		err := accum.AddEvent(event, "")
 		if err != nil {
 			panicError(err)
+			continue
 		}
 	}
 	for _, event := range results.EndBlockEvents {
 		err := accum.AddEvent(event, "")
 		if err != nil {
 			panicError(err)
+			continue
 		}
 	}
 
 	// TODO: move to event accumulator
 	// Retrieve emission and rewards
 	var emission string
-	var rewards []types.ProposerReward
-	var commissionRewards []types.CommissionReward
+	var rewards []cosmos.ProposerReward
+	var commissionRewards []cosmos.CommissionReward
 	for _, event := range results.EndBlockEvents {
 		switch event.Type {
 		case "emission":
@@ -169,7 +352,7 @@ func GetBlockResult(height int64) *types.Block {
 
 		case "proposer_reward":
 			// Parse proposer rewards
-			var reward types.ProposerReward
+			var reward cosmos.ProposerReward
 			for _, attr := range event.Attributes {
 				switch string(attr.Key) {
 				case "amount", "accum_rewards":
@@ -184,7 +367,7 @@ func GetBlockResult(height int64) *types.Block {
 
 		case "commission_reward":
 			// Parser commission reward
-			var reward types.CommissionReward
+			var reward cosmos.CommissionReward
 			for _, attr := range event.Attributes {
 				switch string(attr.Key) {
 				case "amount":
@@ -207,21 +390,28 @@ func GetBlockResult(height int64) *types.Block {
 		"end-block-events", len(results.EndBlockEvents),
 	)
 
+	web3Receipts := <-web3ReceiptsChan
+
 	// Create and fill Block object and then marshal to JSON
-	return &types.Block{
-		ID:                block.BlockID,
-		Evidence:          block.Block.Evidence,
-		Header:            block.Block.Header,
-		LastCommit:        block.Block.LastCommit,
-		Data:              types.BlockData{Txs: txs},
-		Emission:          emission,
-		Rewards:           rewards,
-		CommissionRewards: commissionRewards,
-		EndBlockEvents:    parseEvents(results.EndBlockEvents),
-		BeginBlockEvents:  parseEvents(results.BeginBlockEvents),
-		Size:              size,
-		StateChanges:      *accum,
-		EVM: types.BlockEVM{
+	return &types.BlockData{
+		CosmosBlock: &cosmos.Block{
+			ID:       cosmos.BlockId{Hash: block.BlockID.Hash.String()},
+			Evidence: block.Block.Evidence,
+			Header: cosmos.Header{
+				Time:   block.Block.Time.String(),
+				Height: int(block.Block.Height),
+			},
+			LastCommit:        block.Block.LastCommit,
+			Data:              cosmos.BlockTx{Txs: txs},
+			Emission:          emission,
+			Rewards:           rewards,
+			CommissionRewards: commissionRewards,
+			EndBlockEvents:    parseEvents(results.EndBlockEvents),
+			BeginBlockEvents:  parseEvents(results.BeginBlockEvents),
+			Size:              size,
+			StateChanges:      *accum,
+		},
+		EvmBlock: &evm.BlockEVM{
 			Header:       web3Block.Header(),
 			Transactions: web3Transactions,
 			Uncles:       web3Body.Uncles,
@@ -233,7 +423,7 @@ func GetBlockResult(height int64) *types.Block {
 func panicError(err error) {
 	if err != nil {
 		fmt.Println(fmt.Sprintf("Error: %v", err))
-		panic(err)
+		return
 	}
 }
 
@@ -272,13 +462,16 @@ func fetchBlockSize(ctx context.Context, rpcClient *rpc.HTTP, height int64, ch c
 
 	// Request blockchain info
 	result, err := rpcClient.BlockchainInfo(ctx, height, height)
-	panicError(err)
+	if err != nil {
+		panicError(err)
+		return
+	}
 
 	// Send result to the channel
 	ch <- result.BlockMetas[0].BlockSize
 }
 
-func fetchBlockResults(ctx context.Context, rpcClient *rpc.HTTP, cdc params.EncodingConfig, height int64, block ctypes.ResultBlock, ea *events.EventAccumulator, ch chan []types.Tx, brch chan *ctypes.ResultBlockResults) {
+func fetchBlockResults(ctx context.Context, rpcClient *rpc.HTTP, cdc params.EncodingConfig, height int64, block ctypes.ResultBlock, ea *events.EventAccumulator, ch chan []cosmos.Tx, brch chan *ctypes.ResultBlockResults) {
 	var err error
 
 	// Request block results from the node
@@ -298,19 +491,22 @@ func fetchBlockResults(ctx context.Context, rpcClient *rpc.HTTP, cdc params.Enco
 	}
 
 	// Prepare block results by overall processing
-	var results []types.Tx
+	var results []cosmos.Tx
 	for i, tx := range block.Block.Txs {
-		var result types.Tx
+		var result cosmos.Tx
 		var txLog []interface{}
 		txr := blockResults.TxsResults[i]
 
 		recoveredTx, err := cdc.TxConfig.TxDecoder()(tx)
-		panicError(err)
+		if err != nil {
+			panicError(err)
+			continue
+		}
 
 		// Parse transaction results logs
 		err = json.Unmarshal([]byte(txr.Log), &txLog)
 		if err != nil {
-			result.Log = []interface{}{types.FailedTxLog{Log: txr.Log}}
+			result.Log = []interface{}{cosmos.FailedTxLog{Log: txr.Log}}
 		} else {
 			result.Log = txLog
 		}
@@ -331,6 +527,7 @@ func fetchBlockResults(ctx context.Context, rpcClient *rpc.HTTP, cdc params.Enco
 			if err != nil {
 				fmt.Printf("error in event %v\n", event.Type)
 				panicError(err)
+				continue
 			}
 		}
 	}
@@ -340,17 +537,19 @@ func fetchBlockResults(ctx context.Context, rpcClient *rpc.HTTP, cdc params.Enco
 	brch <- blockResults
 }
 
-func fetchBlockWeb3(ctx context.Context, web3Client *web3.Client, height int64, ch chan *web3types.Block) {
+func FetchBlockWeb3(ctx context.Context, web3Client *web3.Client, height int64, ch chan *web3types.Block) {
 
 	// Request block by number
 	result, err := web3Client.BlockByNumber(ctx, big.NewInt(height))
-	panicError(err)
+	if err != nil {
+		panicError(err)
+	}
 
 	// Send result to the channel
 	ch <- result
 }
 
-func fetchBlockTxReceiptsWeb3(ethRpcClient *ethrpc.Client, block *web3types.Block, ch chan web3types.Receipts) {
+func FetchBlockTxReceiptsWeb3(ethRpcClient *ethrpc.Client, block *web3types.Block, ch chan web3types.Receipts) {
 	txCount := len(block.Transactions())
 	results := make(web3types.Receipts, txCount)
 	requests := make([]ethrpc.BatchElem, txCount)
@@ -434,17 +633,20 @@ func DurationToString(d time.Duration) string {
 	return fmt.Sprintf("%s %s", amount, unit)
 }
 
-func parseTxInfo(tx sdk.Tx, cdc params.EncodingConfig) (txInfo types.TxInfo) {
+func parseTxInfo(tx sdk.Tx, cdc params.EncodingConfig) (txInfo cosmos.TxInfo) {
 	if tx == nil {
 		return
 	}
 	for _, rawMsg := range tx.GetMsgs() {
-		params := make(map[string]interface{})
-		err := json.Unmarshal(cdc.Codec.MustMarshalJSON(rawMsg), &params)
-		panicError(err)
-		var msg types.TxMsg
+		parameters := make(map[string]interface{})
+		err := json.Unmarshal(cdc.Codec.MustMarshalJSON(rawMsg), &parameters)
+		if err != nil {
+			panicError(err)
+			continue
+		}
+		var msg cosmos.TxMsg
 		msg.Type = sdk.MsgTypeURL(rawMsg)
-		msg.Params = params
+		msg.Params = parameters
 		for _, signer := range rawMsg.GetSigners() {
 			msg.From = append(msg.From, signer.String())
 		}
@@ -456,15 +658,15 @@ func parseTxInfo(tx sdk.Tx, cdc params.EncodingConfig) (txInfo types.TxInfo) {
 	return
 }
 
-func parseEvents(events []abci.Event) []types.Event {
-	var newEvents []types.Event
+func parseEvents(events []abci.Event) []cosmos.Event {
+	var newEvents []cosmos.Event
 	for _, ev := range events {
-		newEvent := types.Event{
+		newEvent := cosmos.Event{
 			Type:       ev.Type,
-			Attributes: []types.Attribute{},
+			Attributes: []cosmos.Attribute{},
 		}
 		for _, attr := range ev.Attributes {
-			newEvent.Attributes = append(newEvent.Attributes, types.Attribute{
+			newEvent.Attributes = append(newEvent.Attributes, cosmos.Attribute{
 				Key:   string(attr.Key),
 				Value: string(attr.Value),
 			})
