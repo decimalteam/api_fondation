@@ -1,3 +1,7 @@
+// Package slice_with_json_parser for parsing data from data struct
+// where the first level is a slice of specific type, then each
+// element has value that can contains nested json.
+// For use cases, see `slice_with_json_parser_test.go` file.
 package slice_with_json_parser
 
 import (
@@ -8,13 +12,22 @@ import (
 )
 
 type SliceJsonParserState[S any, T any] struct {
-	Source     []S
-	KeyField   string
+	Source []S // data that will be parsed
+	// (optional) each element has a key field,
+	// there it can be customized.
+	KeyField string
+	// (optional) each element has a value field,
+	// there it can be customized.
 	ValueField string
-	Target     *T
-	Kind       string
+	// new struct that will contain a result of the parsing
+	Target *T
+	// kind is the optional qualifying parameter
+	// for determine target field that has the same kind tag value
+	Kind string
 }
 
+// NewSliceJsonParserState setup Source data, Target struct,
+// and optional parameters
 func NewSliceJsonParserState[S any, T any](source []S, kind, keyField, valField string) *SliceJsonParserState[S, T] {
 	return &SliceJsonParserState[S, T]{
 		Source:     source,
@@ -25,8 +38,8 @@ func NewSliceJsonParserState[S any, T any](source []S, kind, keyField, valField 
 	}
 }
 
-func (s *SliceJsonParserState[S, T]) ParseCoinDataFromAttributes() {
-	// todo -- point 3
+// Parse is the function that directly does parsing
+func (s *SliceJsonParserState[S, T]) Parse() {
 	// loop Target at top level Name
 	value := reflect.ValueOf(s.Target).Elem()
 	numFields := value.NumField()
@@ -64,13 +77,13 @@ func (s *SliceJsonParserState[S, T]) ParseCoinDataFromAttributes() {
 			for _, paramValue := range s.Source {
 				var keyField string
 				if len(s.KeyField) == 0 {
-					keyField = "Key"
+					keyField = "Key" // default key field name
 				} else {
 					keyField = s.KeyField
 				}
 				var valueField string
 				if len(s.KeyField) == 0 {
-					valueField = "Value"
+					valueField = "Value" // default value field name
 				} else {
 					valueField = s.KeyField
 				}

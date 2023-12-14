@@ -35,7 +35,7 @@ func TestMapStringParse(t *testing.T) {
 
 	parserEntity := slice_with_json_parser.NewSliceJsonParserState[cosmos.Attribute, TestTarget](testDataForParsing, "", "", "")
 
-	parserEntity.ParseCoinDataFromAttributes()
+	parserEntity.Parse()
 
 	result := parserEntity.Target
 	assert.Equal(t, "testcoin01", result.Id)
@@ -73,7 +73,7 @@ func TestMapStringParseWithKind(t *testing.T) {
 
 	parserEntity := slice_with_json_parser.NewSliceJsonParserState[cosmos.Attribute, TestTarget](testDataForParsing, "id", "", "")
 
-	parserEntity.ParseCoinDataFromAttributes()
+	parserEntity.Parse()
 
 	result := parserEntity.Target
 	assert.Equal(t, "testcoin02", result.Id)
@@ -83,7 +83,7 @@ func TestMapStringParseWithKind(t *testing.T) {
 
 	parserEntity1 := slice_with_json_parser.NewSliceJsonParserState[cosmos.Attribute, TestTarget](testDataForParsing, "sym", "", "")
 
-	parserEntity1.ParseCoinDataFromAttributes()
+	parserEntity1.Parse()
 
 	result1 := parserEntity1.Target
 	assert.Equal(t, "", result1.Id)
