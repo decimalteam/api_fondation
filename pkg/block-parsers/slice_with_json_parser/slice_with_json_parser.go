@@ -2,7 +2,6 @@ package slice_with_json_parser
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/tidwall/gjson"
 	"reflect"
 	"strings"
@@ -16,13 +15,13 @@ type SliceJsonParserState[S any, T any] struct {
 	Kind       string
 }
 
-func NewSliceJsonParserState[S any, T any](source []S, keyField, valField, kind string) *SliceJsonParserState[S, T] {
+func NewSliceJsonParserState[S any, T any](source []S, kind, keyField, valField string) *SliceJsonParserState[S, T] {
 	return &SliceJsonParserState[S, T]{
 		Source:     source,
-		KeyField:   keyField,
-		ValueField: valField,
 		Target:     new(T),
 		Kind:       kind,
+		KeyField:   keyField,
+		ValueField: valField,
 	}
 }
 
@@ -58,21 +57,26 @@ func (s *SliceJsonParserState[S, T]) ParseCoinDataFromAttributes() {
 				parts := strings.SplitN(path, ".", 2)
 				firstLevelPart = parts[0]
 				jsonPart = parts[1]
-				fmt.Println(firstLevelPart, jsonPart)
 			} else {
 				firstLevelPart = path
 			}
 
 			for _, paramValue := range s.Source {
-				paramValueValue := reflect.ValueOf(paramValue).FieldByName("Value").String()
-				paramValueKey := reflect.ValueOf(paramValue).FieldByName("Key").String()
+				var keyField string
+				if len(s.KeyField) == 0 {
+					keyField = "Key"
+				} else {
+					keyField = s.KeyField
+				}
+				var valueField string
+				if len(s.KeyField) == 0 {
+					valueField = "Value"
+				} else {
+					valueField = s.KeyField
+				}
+				paramValueValue := reflect.ValueOf(paramValue).FieldByName(valueField).String()
+				paramValueKey := reflect.ValueOf(paramValue).FieldByName(keyField).String()
 				field := structType.Field(i)
-
-				fmt.Println(paramValueKey)
-				fmt.Println(paramValueValue)
-				fmt.Println(field)
-
-				// first
 				if paramValueKey == firstLevelPart {
 					// get value by json path
 					var js map[string]interface{}

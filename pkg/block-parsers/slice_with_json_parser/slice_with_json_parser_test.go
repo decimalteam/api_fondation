@@ -3,7 +3,7 @@ package slice_with_json_parser_test
 import (
 	"bitbucket.org/decimalteam/api_fondation/pkg/block-parsers/slice_with_json_parser"
 	"bitbucket.org/decimalteam/api_fondation/pkg/parser/cosmos"
-	"fmt"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -33,8 +33,16 @@ func TestMapStringParse(t *testing.T) {
 		UpdatedAt int64
 	}
 
-	parserInstance := slice_with_json_parser.NewSliceJsonParserState[cosmos.Attribute, TestTarget](testDataForParsing, "Key", "Value", "")
+	parserEntity := slice_with_json_parser.NewSliceJsonParserState[cosmos.Attribute, TestTarget](testDataForParsing, "", "", "")
 
-	parserInstance.ParseCoinDataFromAttributes()
-	fmt.Println(parserInstance.Target)
+	parserEntity.ParseCoinDataFromAttributes()
+
+	result := parserEntity.Target
+	assert.Equal(t, "testcoin01", result.Id)
+	assert.Equal(t, "d01mx0yjpwhv0e2982rrtxhfqcpzuevz3tau78qqq", result.Delegator)
+	assert.Equal(t, "d0valoper10heukkrmfyz5pktkh2pkxsh8w7q2p891111111", result.Validator)
+	assert.Equal(t, "STAKE_TYPE_COIN", result.Type)
+	assert.Equal(t, "testcoin01", result.Symbol)
+	assert.Equal(t, "12010000000000000000", result.Amount)
+	assert.Equal(t, int64(0), result.UpdatedAt)
 }
