@@ -22,8 +22,8 @@ type MapParserState[T any] struct {
 }
 
 // NewMapStringParser setup Source data, Target struct and optional kind value
-func NewMapStringParser[T any](source map[string]interface{}, kind string) MapParserState[T] {
-	return MapParserState[T]{
+func NewMapStringParser[T any](source map[string]interface{}, kind string) *MapParserState[T] {
+	return &MapParserState[T]{
 		Source: source,
 		Target: new(T),
 		kind:   kind,
