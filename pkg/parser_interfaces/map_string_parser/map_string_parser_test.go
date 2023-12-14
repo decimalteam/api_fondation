@@ -1,7 +1,7 @@
 package map_string_parser_test
 
 import (
-	"bitbucket.org/decimalteam/api_fondation/pkg/block-parsers/map_string_parser"
+	"bitbucket.org/decimalteam/api_fondation/pkg/parser_interfaces/map_string_parser"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

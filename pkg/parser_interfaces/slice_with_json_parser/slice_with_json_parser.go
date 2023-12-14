@@ -1,7 +1,7 @@
 // Package slice_with_json_parser for parsing data from data struct
 // where the first level is a slice of specific type, then each
 // element has value that can contains nested json.
-// For use cases, see `slice_with_json_parser_test.go` file.
+// For use cases, see the `slice_with_json_parser_test.go` file.
 package slice_with_json_parser
 
 import (

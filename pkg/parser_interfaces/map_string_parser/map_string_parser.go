@@ -2,7 +2,7 @@
 // `map[string]interface` data into some struct with tags that contains
 // possible paths to specific nested data fields.
 // Path can be force specified by tag `kind`.
-// For use case examples, look `map_string_parser_test.go` file.
+// For use case examples, see the `map_string_parser_test.go` file.
 package map_string_parser
 
 import (
