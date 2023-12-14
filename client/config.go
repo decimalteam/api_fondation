@@ -1,4 +1,4 @@
-package worker
+package client
 
 import "os"
 
@@ -9,7 +9,7 @@ type Config struct {
 	WorkersCount    int
 }
 
-func getConfig() *Config {
+func GetConfig() *Config {
 	return &Config{
 		IndexerEndpoint: os.Getenv("INDEXER_URL"),
 		RpcEndpoint:     os.Getenv("RPC_URL"),
