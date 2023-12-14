@@ -14,7 +14,9 @@ require (
 	github.com/nats-io/nats.go v1.28.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/status-im/keycard-go v0.0.0-20200402102358-957c09536969
+	github.com/stretchr/testify v1.8.3
 	github.com/tendermint/tendermint v0.34.24
+	github.com/tidwall/gjson v1.17.0
 	github.com/valyala/fasthttp v1.48.0
 )
 
@@ -149,13 +151,14 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.14.0 // indirect
-	github.com/stretchr/testify v1.8.3 // indirect
 	github.com/subosito/gotenv v1.4.1 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 // indirect
 	github.com/tendermint/btcd v0.1.1 // indirect
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15 // indirect
 	github.com/tendermint/go-amino v0.16.0 // indirect
 	github.com/tendermint/tm-db v0.6.7 // indirect
+	github.com/tidwall/match v1.1.1 // indirect
+	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/tklauser/go-sysconf v0.3.10 // indirect
 	github.com/tklauser/numcpus v0.4.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
