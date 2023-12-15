@@ -3,6 +3,8 @@
 // possible paths to specific nested data fields.
 // Path can be force specified by tag `kind`.
 // For use case examples, see the `map_string_parser_test.go` file.
+// In source data field must have the same type as T struct field type
+// in (NewMapStringParser[T])
 package map_string_parser
 
 import (
@@ -63,15 +65,15 @@ func (s *MapParserState[T]) Parse() {
 			for name, paramValue := range s.Source {
 				// parts[0] is a current item name (e.g., coin)
 				if parts[0] == name {
-					if paramValue, ok := paramValue.(map[string]interface{}); ok {
+					param, ok := paramValue.(map[string]interface{})
+					if ok {
 						tail := parts[1:]
-						deepValue := getDeepParam(tail, paramValue)
+						deepValue := getDeepParam(tail, param)
 						if deepValue != nil {
 							field := structType.Field(i)
 							value.Elem().FieldByName(field.Name).Set(reflect.ValueOf(deepValue))
 						}
-					}
-					if paramValue, ok := paramValue.(string); ok {
+					} else {
 						field := structType.Field(i)
 						value.Elem().FieldByName(field.Name).Set(reflect.ValueOf(paramValue))
 						break breakPathsLoop
