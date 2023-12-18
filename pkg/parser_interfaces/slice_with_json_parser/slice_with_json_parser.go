@@ -65,7 +65,7 @@ func (s *SliceJsonParserState[S, T]) Parse() {
 		for _, path := range paths {
 			var firstLevelPart string
 			jsonPart := ""
-			if strings.Contains(tagMsg, ".") {
+			if strings.Contains(path, ".") {
 				// split first part before first `.`
 				parts := strings.SplitN(path, ".", 2)
 				firstLevelPart = parts[0]
