@@ -10,7 +10,7 @@ type Block struct {
 	Header            Header                  `json:"header"`
 	Data              BlockTx                 `json:"data"`
 	Evidence          interface{}             `json:"evidence"`
-	LastCommit        interface{}             `json:"last_commit"`
+	LastCommit        *types.Commit           `json:"last_commit"`
 	Emission          string                  `json:"emission"`
 	Rewards           []ProposerReward        `json:"rewards"`
 	CommissionRewards []CommissionReward      `json:"commission_rewards"`
