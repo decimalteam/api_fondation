@@ -2,6 +2,7 @@ package cosmos
 
 import (
 	"bitbucket.org/decimalteam/api_fondation/events"
+	"github.com/tendermint/tendermint/types"
 )
 
 type Block struct {
@@ -46,8 +47,9 @@ type Attribute struct {
 }
 
 type Header struct {
-	Time   string `json:"time"`
-	Height int    `json:"height"`
+	Time            string        `json:"time"`
+	Height          int           `json:"height"`
+	ProposerAddress types.Address `json:"proposer_address"`
 }
 
 type BlockId struct {

@@ -398,8 +398,9 @@ func GetBlockResult(height int64) *types.BlockData {
 			ID:       cosmos.BlockId{Hash: block.BlockID.Hash.String()},
 			Evidence: block.Block.Evidence,
 			Header: cosmos.Header{
-				Time:   block.Block.Time.String(),
-				Height: int(block.Block.Height),
+				Time:            block.Block.Time.String(),
+				Height:          int(block.Block.Height),
+				ProposerAddress: block.Block.ProposerAddress,
 			},
 			LastCommit:        block.Block.LastCommit,
 			Data:              cosmos.BlockTx{Txs: txs},
